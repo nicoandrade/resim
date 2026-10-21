@@ -11,4 +11,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - run: python3 scripts/diagnose-heic.py
+      - run: |
+          test -f "$(brew --prefix webp)/lib/libwebp.dylib" || brew install webp
+          python3 scripts/diagnose-heic.py
