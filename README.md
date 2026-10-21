@@ -66,7 +66,7 @@ bash scripts/package.sh
 
 This creates a local ad hoc package in `dist/`. Public direct distribution requires Developer ID signing and Apple notarization; see [distribution instructions](docs/DISTRIBUTION.md). Do not put signing credentials, certificates, private keys, or local release reports in the repository.
 
-After the one-time signing setup, pushing a stable version tag runs the [GitHub release workflow](.github/workflows/release.yml): clean builds and tests on Apple Silicon and Intel, signing, notarization, and publication of the DMG and checksum. The landing download always resolves to the latest verified release. See [automated releases](docs/DISTRIBUTION.md#automated-github-releases) for configuration and rehearsals.
+Run `python3 scripts/release.py --publish` on your signing Mac to build from a clean clone, run tests, sign and notarize through the local Keychain, and publish the verified DMG and checksum to GitHub. The command also requires successful Apple Silicon and Intel CI checks for the source commit. Apple credentials stay on the Mac; GitHub needs no signing secrets. Run without `--publish` for a signed rehearsal. See [local release automation](docs/DISTRIBUTION.md#automated-local-releases).
 
 Installation and updates are manual: drag Resim into Applications and replace the app when updating. Removing Resim does not remove original images or optimized copies.
 

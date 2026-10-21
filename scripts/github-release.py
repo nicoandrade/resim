@@ -4,7 +4,6 @@
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -63,22 +62,25 @@ def release_notes(tag):
 
 
 def validate_source(tag, publishing):
-    require(os.environ.get('GITHUB_REPOSITORY', REPOSITORY) == REPOSITORY, 'Unexpected repository.')
     require(tag == source_tag(), 'Tag and authoritative app version do not match.')
     sha = command('git', 'rev-parse', 'HEAD')
-    require(sha == os.environ.get('GITHUB_SHA', sha), 'Checkout does not match the workflow commit.')
     subprocess.run(['git', 'merge-base', '--is-ancestor', sha, 'refs/remotes/origin/main'],
                    cwd=ROOT, check=True)
     if publishing:
         require(command('git', 'rev-parse', f'refs/tags/{tag}^{{commit}}') == sha,
                 'Release tag must identify the checked-out main commit.')
         require(api(f'commits/{tag}')['sha'] == sha, 'Remote tag changed; refusing to publish.')
-        existing = api(f'releases/tags/{tag}', optional=True)
-        require(existing is None or existing['draft'], 'This version is already published; never overwrite it.')
-        latest = api('releases/latest', optional=True)
-        require(latest is None or version_tuple(tag) > version_tuple(latest['tag_name']),
-                'Version must be newer than Latest; refusing to downgrade the landing download.')
+        validate_new_version(tag)
     return sha
+
+
+def validate_new_version(tag):
+    version_tuple(tag)
+    existing = api(f'releases/tags/{tag}', optional=True)
+    require(existing is None or existing['draft'], 'This version is already published; never overwrite it.')
+    latest = api('releases/latest', optional=True)
+    require(latest is None or version_tuple(tag) > version_tuple(latest['tag_name']),
+            'Version must be newer than Latest; refusing to downgrade the landing download.')
 
 
 def local_assets(tag):
@@ -102,28 +104,7 @@ def verify_uploaded(release, paths, hashes):
         require(asset.get('digest') == f'sha256:{hashes[path.name]}', f'Uploaded digest mismatch: {path.name}')
 
 
-def prepare():
-    publishing = os.environ.get('GITHUB_EVENT_NAME') == 'push'
-    tag = source_tag()
-    if publishing:
-        require(os.environ.get('GITHUB_REF') == f'refs/tags/{tag}', 'Push a stable tag matching the app version.')
-    else:
-        require(os.environ.get('GITHUB_REF', 'refs/heads/main') == 'refs/heads/main',
-                'Manual rehearsals must run from main.')
-    validate_source(tag, publishing)
-    notes = release_notes(tag)
-    (ROOT / '.build').mkdir(exist_ok=True)
-    (ROOT / '.build/release-notes.md').write_text(notes)
-    if os.environ.get('GITHUB_OUTPUT'):
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-            output.write(f'tag={tag}\n')
-    print(f'{tag}: source and release notes validated; publish={publishing}.')
-
-
-def publish():
-    tag = os.environ['RELEASE_TAG']
-    require(os.environ.get('GITHUB_EVENT_NAME') == 'push'
-            and os.environ.get('GITHUB_REF') == f'refs/tags/{tag}', 'Publication requires a matching tag push.')
+def publish(tag):
     sha = validate_source(tag, True)
     paths, hashes = local_assets(tag)
     notes = release_notes(tag)
@@ -148,8 +129,8 @@ def publish():
     print(result['html_url'])
 
 
-def verify_download():
-    tag = os.environ.get('RELEASE_TAG', source_tag())
+def verify_download(tag=None):
+    tag = tag or source_tag()
     _, hashes = local_assets(tag)
     base = f'https://github.com/{REPOSITORY}/releases/latest/download/'
     # Deliberately use no GitHub credentials: this is the landing visitor's URL.
@@ -172,9 +153,9 @@ def verify_download():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['prepare', 'publish', 'verify-download'])
-    action = parser.parse_args().action
-    {'prepare': prepare, 'publish': publish, 'verify-download': verify_download}[action]()
+    parser.add_argument('action', choices=['verify-download'])
+    parser.parse_args()
+    verify_download()
 
 
 if __name__ == '__main__':

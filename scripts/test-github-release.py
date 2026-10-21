@@ -2,24 +2,22 @@
 """Exercise release failure paths without signing credentials or GitHub writes."""
 
 import copy
-import base64
-from contextlib import redirect_stdout
 import hashlib
 import importlib.util
 import io
 import json
-import os
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('github_release', Path(__file__).with_name('github-release.py'))
 release = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(release)
-sign_spec = importlib.util.spec_from_file_location('ci_sign_package', Path(__file__).with_name('ci-sign-package.py'))
-signer = importlib.util.module_from_spec(sign_spec)
-sign_spec.loader.exec_module(signer)
+local_spec = importlib.util.spec_from_file_location('local_release', Path(__file__).with_name('release.py'))
+local = importlib.util.module_from_spec(local_spec)
+local_spec.loader.exec_module(local)
 
 
 class ReleaseTests(unittest.TestCase):
@@ -32,11 +30,8 @@ class ReleaseTests(unittest.TestCase):
         (self.root / 'scripts/generate-project.py').write_text("base_settings = dict(MARKETING_VERSION='0.2.0')\n")
         (self.root / 'CHANGELOG.md').write_text('# Changelog\n\n## Unreleased\n\n## 0.2.0 - 2026-10-21\n\n### Fixed\n\n- A fix.\n\n## 0.1.0 - 2026-10-20\n\n- Old notes.\n')
         self.sha = 'a' * 40
-        self.environment = dict(GITHUB_REPOSITORY=release.REPOSITORY, GITHUB_SHA=self.sha,
-                                GITHUB_EVENT_NAME='push', GITHUB_REF='refs/tags/v0.2.0', RELEASE_TAG='v0.2.0')
         self.addCleanup(patch.stopall)
         patch.object(release, 'ROOT', self.root).start()
-        patch.dict(os.environ, self.environment, clear=True).start()
         patch('sys.stdout', new=io.StringIO()).start()
         patch.object(release, 'command', return_value=self.sha).start()
         self.run = patch.object(release.subprocess, 'run').start()
@@ -77,7 +72,7 @@ class ReleaseTests(unittest.TestCase):
         self.fail(f'Unexpected API request: {method} {path}')
 
     def test_publish_verifies_draft_before_advancing_latest(self):
-        release.publish()
+        release.publish('v0.2.0')
         self.assertFalse(self.draft['draft'])
         self.assertEqual(self.draft['make_latest'], 'true')
         mutations = [(path, method) for path, method, _ in self.requests if method != 'GET']
@@ -86,29 +81,27 @@ class ReleaseTests(unittest.TestCase):
                                   '--repo', release.REPOSITORY], cwd=self.root, check=True)
 
     def test_tag_version_mismatch_never_writes(self):
-        os.environ['RELEASE_TAG'] = 'v0.3.0'
-        os.environ['GITHUB_REF'] = 'refs/tags/v0.3.0'
         with self.assertRaisesRegex(RuntimeError, 'app version'):
-            release.publish()
+            release.publish('v0.3.0')
         self.assertEqual(self.requests, [])
 
     def test_existing_public_release_is_never_modified(self):
         self.draft = dict(draft=False)
         with self.assertRaisesRegex(RuntimeError, 'already published'):
-            release.publish()
+            release.publish('v0.2.0')
         self.assertTrue(all(method == 'GET' for _, method, _ in self.requests))
 
     def test_older_version_cannot_replace_latest(self):
         self.latest = dict(tag_name='v0.3.0')
         with self.assertRaisesRegex(RuntimeError, 'downgrade'):
-            release.publish()
+            release.publish('v0.2.0')
         self.assertTrue(all(method == 'GET' for _, method, _ in self.requests))
 
     def test_missing_notarization_never_creates_draft(self):
         report = self.root / '.build/package-verification.json'
         report.write_text(json.dumps(dict(public_distribution_ready=False)))
         with self.assertRaisesRegex(RuntimeError, 'notarized'):
-            release.publish()
+            release.publish('v0.2.0')
         self.assertTrue(all(method == 'GET' for _, method, _ in self.requests))
 
     def test_tampered_dmg_and_wrong_checksum_are_rejected(self):
@@ -129,19 +122,16 @@ class ReleaseTests(unittest.TestCase):
     def test_failed_upload_verification_leaves_previous_latest(self):
         with patch.object(release, 'verify_uploaded', side_effect=RuntimeError('upload digest mismatch')):
             with self.assertRaisesRegex(RuntimeError, 'digest mismatch'):
-                release.publish()
+                release.publish('v0.2.0')
         self.assertTrue(self.draft['draft'])
         self.assertEqual(self.latest['tag_name'], 'v0.1.0')
         self.assertFalse(any(method == 'PATCH' for _, method, _ in self.requests))
 
-    def test_manual_rehearsal_does_not_contact_release_api(self):
-        os.environ.update(GITHUB_EVENT_NAME='workflow_dispatch', GITHUB_REF='refs/heads/main')
-        release.prepare()
+    def test_notes_include_only_this_release_and_do_not_mutate_github(self):
+        notes = release.release_notes('v0.2.0')
+        self.assertIn('A fix.', notes)
+        self.assertNotIn('Old notes.', notes)
         self.assertEqual(self.requests, [])
-        self.assertIn('A fix.', (self.root / '.build/release-notes.md').read_text())
-        self.assertNotIn('Old notes.', (self.root / '.build/release-notes.md').read_text())
-        with self.assertRaisesRegex(RuntimeError, 'matching tag push'):
-            release.publish()
 
     def test_prerelease_and_invalid_tags_are_rejected(self):
         for tag in ['0.2.0', 'v0.2.0-rc.1', 'v01.2.0', 'v0.2.0;echo x']:
@@ -149,72 +139,127 @@ class ReleaseTests(unittest.TestCase):
                 release.version_tuple(tag)
 
 
-class SigningCleanupTests(unittest.TestCase):
-    def test_wrapped_certificate_package_environment_and_cleanup(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            (root / '.build').mkdir()
-            (root / '.build/package-verification.json').write_text(json.dumps(dict(public_distribution_ready=True)))
-            environment = {name: 'test-value' for name in signer.SECRET_NAMES}
-            environment.update(GITHUB_ACTIONS='true', RUNNER_TEMP=temporary,
-                               DEVELOPER_ID_P12_BASE64=base64.encodebytes(b'fake-certificate').decode())
-            calls = []
 
-            def private(*args):
-                calls.append(args)
-                if args[1] == 'list-keychains' and '-s' not in args:
-                    return '"original.keychain-db"'
-                if args[1] == 'find-identity':
-                    return f'1) {"A" * 40} "Developer ID Application: Test"'
-                if args[1] == 'import':
-                    self.assertEqual(Path(args[2]).read_bytes(), b'fake-certificate')
-                return ''
+class LocalReleaseTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.addCleanup(patch.stopall)
+        patch.object(local, 'ROOT', self.root).start()
+        self.api = patch.object(local.github, 'api').start()
 
-            def run(args, **kwargs):
-                if args[0] == 'bash':
-                    self.assertFalse(set(signer.SECRET_NAMES) & kwargs['env'].keys())
-                    self.assertEqual(kwargs['env']['REQUIRE_NOTARIZATION'], '1')
-                    self.assertEqual(kwargs['env']['SKIP_BUILD'], '1')
-                    self.assertEqual(kwargs['env']['NOTARY_PROFILE'], 'resim-ci')
-                return type('Result', (), {'returncode': 0})()
+    def test_preflight_rejects_unrelated_origin_before_fetching(self):
+        with patch.object(local, 'git', return_value='https://github.com/example/other.git'), \
+                patch.object(local.subprocess, 'run') as run:
+            with self.assertRaisesRegex(RuntimeError, 'intended GitHub'):
+                local.validate_checkout()
+            run.assert_not_called()
 
-            with patch.dict(os.environ, environment, clear=True), patch.object(signer, 'ROOT', root), \
-                    patch.object(signer, 'private_command', side_effect=private), \
-                    patch.object(signer.subprocess, 'run', side_effect=run) as subprocess_run, \
-                    redirect_stdout(io.StringIO()):
-                signer.main()
-                self.assertEqual(subprocess_run.call_args.args[0][:2], ['security', 'delete-keychain'])
-                self.assertFalse(list(root.glob('resim-signing-*')))
+    def test_preflight_rejects_uncommitted_source(self):
+        with patch.object(local, 'git', side_effect=[f'https://github.com/{local.github.REPOSITORY}.git', 'main', ' M source']), \
+                patch.object(local.subprocess, 'run') as run:
+            with self.assertRaisesRegex(RuntimeError, 'Commit and push'):
+                local.validate_checkout()
+            run.assert_not_called()
 
-    def test_missing_secrets_stop_before_keychain_commands(self):
-        with patch.dict(os.environ, {}, clear=True), patch.object(signer, 'private_command') as private:
-            with self.assertRaisesRegex(SystemExit, 'Configure these GitHub'):
-                signer.main()
-            private.assert_not_called()
+    def test_existing_keychain_profile_is_used_without_export(self):
+        (self.root / 'local').mkdir()
+        (self.root / 'local/release.json').write_text(json.dumps(dict(notary_profile='test-profile')))
+        identity = 'A' * 40
+        result = SimpleNamespace(returncode=0, stdout=f'1) {identity} "Developer ID Application: Test"')
+        with patch.dict(local.os.environ, {}, clear=True), patch.object(local.subprocess, 'run', return_value=result) as run:
+            config = local.signing_configuration(None)
+            self.assertEqual(config, dict(SIGN_IDENTITY=identity, NOTARY_PROFILE='test-profile'))
+            self.assertEqual(run.call_args_list[0].args[0], ['security', 'find-identity', '-v', '-p', 'codesigning'])
+            self.assertEqual(run.call_args_list[1].args[0], ['xcrun', 'notarytool', 'history', '--keychain-profile',
+                                                           'test-profile', '--output-format', 'json'])
+            self.assertFalse(any('export' in call.args[0] for call in run.call_args_list))
+        self.api.assert_not_called()
 
-    def test_failed_import_removes_temporary_keychain(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            environment = {name: 'test-value' for name in signer.SECRET_NAMES}
-            environment.update(GITHUB_ACTIONS='true', RUNNER_TEMP=temporary,
-                               DEVELOPER_ID_P12_BASE64=base64.b64encode(b'fake-certificate').decode())
-            calls = []
+    def test_ambiguous_signing_identity_fails_before_notarization(self):
+        identities = '\n'.join(f'1) {letter * 40} "Developer ID Application: Test"' for letter in ('A', 'B'))
+        with patch.dict(local.os.environ, {}, clear=True), \
+                patch.object(local.subprocess, 'run', return_value=SimpleNamespace(stdout=identities)) as run:
+            with self.assertRaisesRegex(RuntimeError, 'one valid Developer ID'):
+                local.signing_configuration('test-profile')
+            self.assertEqual(run.call_count, 1)
 
-            def private(*args):
-                calls.append(args)
-                if args[1] == 'list-keychains' and '-s' not in args:
-                    return '"original.keychain-db"'
-                if args[1] == 'import':
-                    raise RuntimeError('test import failure')
-                return ''
+    def test_failed_notary_authentication_stops_preflight(self):
+        results = [SimpleNamespace(stdout=f'1) {"A" * 40} "Developer ID Application: Test"'), SimpleNamespace(returncode=1)]
+        with patch.dict(local.os.environ, {}, clear=True), patch.object(local.subprocess, 'run', side_effect=results):
+            with self.assertRaisesRegex(RuntimeError, 'could not authenticate'):
+                local.signing_configuration('test-profile')
+        self.api.assert_not_called()
 
-            with patch.dict(os.environ, environment, clear=True), \
-                    patch.object(signer, 'private_command', side_effect=private), \
-                    patch.object(signer.subprocess, 'run') as run:
-                with self.assertRaisesRegex(RuntimeError, 'test import failure'):
-                    signer.main()
-                self.assertIn(('security', 'list-keychains', '-d', 'user', '-s', 'original.keychain-db'), calls)
-                self.assertEqual(run.call_args.args[0][:2], ['security', 'delete-keychain'])
-                self.assertEqual(list(Path(temporary).iterdir()), [])
+    def test_conflicting_remote_tag_is_never_moved(self):
+        self.api.side_effect = [dict(object=dict(sha='old')), dict(sha='old')]
+        with self.assertRaisesRegex(RuntimeError, 'another commit'):
+            local.validate_tag('v0.2.0', 'new')
+        self.assertTrue(all(call.kwargs.get('method', 'GET') == 'GET' for call in self.api.call_args_list))
+
+    def test_tag_creation_requires_new_version_and_does_not_force_fetch(self):
+        self.api.side_effect = [None, dict(tag_name='v0.1.0'), None, dict(ref='refs/tags/v0.2.0')]
+        with patch.object(local.subprocess, 'run') as run:
+            local.create_tag('v0.2.0', 'sha', self.root)
+        self.api.assert_any_call('git/refs', 'POST', dict(ref='refs/tags/v0.2.0', sha='sha'))
+        run.assert_called_once_with(['git', 'fetch', '--quiet', 'origin', 'refs/tags/v0.2.0:refs/tags/v0.2.0'],
+                                    cwd=self.root, check=True)
+
+    def test_failed_ci_blocks_publication(self):
+        result = json.dumps([dict(databaseId=1, status='completed', conclusion='failure')])
+        with patch.object(local.subprocess, 'check_output', return_value=result):
+            with self.assertRaisesRegex(RuntimeError, 'Fix CI'):
+                local.wait_for_ci('sha', self.root)
+        self.api.assert_not_called()
+
+    def test_failed_build_does_not_create_github_tag_or_release(self):
+        with patch.object(local.subprocess, 'run', return_value=SimpleNamespace(returncode=1)):
+            with self.assertRaisesRegex(RuntimeError, 'build failed'):
+                local.run_step('build', ['bash', 'scripts/build.sh'], self.root, {}, self.root)
+        self.api.assert_not_called()
+
+    def orchestration(self, publishing):
+        (self.root / '.build').mkdir()
+        events = []
+        def step(label, command, source, environment, directory):
+            events.append(label)
+            if label == 'signed-package':
+                self.assertEqual(environment['REQUIRE_NOTARIZATION'], '1')
+                self.assertEqual(environment['SKIP_BUILD'], '1')
+                self.assertEqual(environment['NOTARY_PROFILE'], 'test-profile')
+            else:
+                self.assertNotIn('SIGN_IDENTITY', environment)
+        with patch.object(local.sys, 'platform', 'darwin'), \
+                patch.object(local, 'build_environment', return_value={}), \
+                patch.object(local, 'validate_checkout', return_value='sha'), \
+                patch.object(local.github, 'source_tag', return_value='v0.2.0'), \
+                patch.object(local.github, 'release_notes'), \
+                patch.object(local.github, 'validate_new_version'), \
+                patch.object(local, 'validate_tag'), \
+                patch.object(local, 'signing_configuration', return_value=dict(SIGN_IDENTITY='identity', NOTARY_PROFILE='test-profile')), \
+                patch.object(local.subprocess, 'run', return_value=SimpleNamespace(returncode=0)), \
+                patch.object(local, 'git', side_effect=['sha', '']), \
+                patch.object(local, 'run_step', side_effect=step), \
+                patch.object(local.github, 'local_assets', side_effect=lambda tag: events.append('verified')), \
+                patch.object(local, 'wait_for_ci', side_effect=lambda *a: events.append('ci')), \
+                patch.object(local, 'create_tag', side_effect=lambda *a: events.append('tag')), \
+                patch.object(local.github, 'publish', side_effect=lambda tag: events.append('publish')), \
+                patch.object(local.github, 'verify_download', side_effect=lambda tag: events.append('download')), \
+                patch('sys.stdout', new=io.StringIO()):
+            local.execute(SimpleNamespace(publish=publishing, check=False, notary_profile=None))
+        return events
+
+    def test_rehearsal_signs_and_verifies_without_tag_or_publication(self):
+        events = self.orchestration(False)
+        self.assertEqual(events[-2:], ['signed-package', 'verified'])
+        self.assertNotIn('tag', events)
+        self.assertNotIn('publish', events)
+        self.api.assert_not_called()
+
+    def test_publication_is_ordered_after_package_verification_and_ci(self):
+        events = self.orchestration(True)
+        self.assertEqual(events[-6:], ['signed-package', 'verified', 'ci', 'tag', 'publish', 'download'])
 
 
 if __name__ == '__main__':

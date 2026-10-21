@@ -8,7 +8,7 @@ Notable changes to Resim are documented here. This file follows
 
 ### Added
 
-- Automated stable GitHub releases with tests on both Mac architectures, Developer ID signing, Apple notarization, stapled tickets, verified SHA-256 checksums, and the permanent landing download URL. Signing requires the documented one-time GitHub environment configuration.
+- Local release automation builds from a clean clone, tests, signs and notarizes through the Mac's Keychain, then publishes the DMG and SHA-256 checksum as Latest on GitHub. The landing keeps its permanent download URL, and no Apple signing credentials are stored on GitHub.
 
 ### Fixed
 
