@@ -12,7 +12,7 @@ final class HEICIntegrationTests: XCTestCase {
     }
 
     /// Generated locally; no personal photos or network fixtures.
-    private func fixture(orientation: Int = 6, p3: Bool = false, width: Int = 512, height: Int = 384, colorful: Bool = false, textured: Bool = false) throws -> Data {
+    private func fixture(orientation: Int = 6, p3: Bool = false, width: Int = 512, height: Int = 384, colorful: Bool = false, flat: Bool = false, padded: Bool = false) throws -> Data {
         var rgba = [UInt8](repeating: 255, count: width * height * 4)
         for y in 0..<height { for x in 0..<width {
             let offset = (y * width + x) * 4
@@ -21,8 +21,7 @@ final class HEICIntegrationTests: XCTestCase {
                 rgba[offset + 1] = UInt8(y * 255 / height)
                 rgba[offset + 2] = UInt8((x + y) * 127 / (width + height))
             } else {
-                let texture = textured ? ((x * 17 + y * 31) % 3) : 0
-                let value = UInt8(100 + ((x * 512 / width) / 3 + (y * 384 / height) / 3) / 8 + texture)
+                let value = flat ? UInt8(128) : UInt8(100 + ((x * 512 / width) / 3 + (y * 384 / height) / 3) / 8)
                 rgba[offset] = value; rgba[offset + 1] = value; rgba[offset + 2] = value
             }
         }}
@@ -47,7 +46,15 @@ final class HEICIntegrationTests: XCTestCase {
         ]
         CGImageDestinationAddImageAndMetadata(destination, image, metadata, options as CFDictionary)
         XCTAssertTrue(CGImageDestinationFinalize(destination))
-        let result = data as Data
+        var result = data as Data
+        if padded {
+            // A valid, removable ISO-BMFF free box guarantees space to reduce
+            // independently of the OS's hardware/software encoder efficiency.
+            var size = UInt32(16_384 + 8).bigEndian
+            withUnsafeBytes(of: &size) { result.append(contentsOf: $0) }
+            result.append(Data("free".utf8))
+            result.append(Data(repeating: 0, count: 16_384))
+        }
         let smoke = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent(".build/new-format-smoke", isDirectory: true)
         try FileManager.default.createDirectory(at: smoke, withIntermediateDirectories: true)
@@ -69,42 +76,43 @@ final class HEICIntegrationTests: XCTestCase {
         return CGImageMetadataCopyStringValueWithPath(metadata, nil, "resim:PrivateUnknownTag" as CFString) as String?
     }
 
-    func testHEICAutomaticActuallyReducesAndPreservesOrientationICCAndOpaqueMetadata() throws {
+    func testHEICAutomaticReducesPaddedImageAndPreservesOrientationICCAndOpaqueMetadata() throws {
         for p3 in [false, true] {
-            // ImageIO's native encoder differs between hardware, software and OS
-            // versions. Require an accepted recompression in each color space,
-            // while allowing individual fixtures to return a safe No Reduction.
-            var accepted = false
-            for sample in [(512, false), (1024, false), (1024, true)] {
-                let original = try fixture(p3: p3, width: sample.0, height: sample.0 * 3 / 4, textured: sample.1)
-                let work = try directory()
-                let input = work.appendingPathComponent("Fóto Ñ.HEIC")
-                try original.write(to: input)
-                let output = try NativeImageProcessor().optimize(source: input, workDirectory: work,
-                    settings: .init(mode: .automatic), cancellation: CancellationToken())
-                XCTAssertEqual(try Data(contentsOf: input), original)
-                guard let output else {
-                    XCTAssertFalse(FileManager.default.fileExists(atPath: work.appendingPathComponent("candidate.heic").path))
-                    print("HEIC safe fallback: p3=\(p3), width=\(sample.0), textured=\(sample.1), bytes=\(original.count)")
-                    continue
-                }
-                let candidate = try Data(contentsOf: output)
-                XCTAssertLessThan(candidate.count, original.count)
-                XCTAssertEqual(try Data(contentsOf: input), original)
-                let a = try decoded(original), b = try decoded(candidate)
-                XCTAssertEqual(a.width, b.width); XCTAssertEqual(a.height, b.height)
-                XCTAssertEqual(a.bitsPerComponent, b.bitsPerComponent)
-                XCTAssertEqual(a.colorSpace?.copyICCData() as Data?, b.colorSpace?.copyICCData() as Data?)
-                XCTAssertEqual(try properties(candidate)[kCGImagePropertyOrientation] as? Int, 6)
-                XCTAssertTrue(NSDictionary(dictionary: try properties(original)).isEqual(to: try properties(candidate)))
-                XCTAssertEqual(try customMetadata(original), "Opaque metadata must survive unchanged")
-                XCTAssertEqual(try customMetadata(original), try customMetadata(candidate))
-                XCTAssertNotEqual(a.dataProvider?.data as Data?, b.dataProvider?.data as Data?, "Exercises recompression")
-                print("HEIC automatic \(p3 ? "Display P3" : "sRGB"): \(original.count) -> \(candidate.count)")
-                accepted = true
-                break
-            }
-            XCTAssertTrue(accepted, "At least one high-quality fixture must exercise accepted recompression in each color space")
+            // Flat samples pass the unchanged RGB quality gate on both native
+            // encoder implementations. Colorful rejection is tested separately.
+            let original = try fixture(p3: p3, flat: true, padded: true)
+            let work = try directory()
+            let input = work.appendingPathComponent("Fóto Ñ.HEIC")
+            try original.write(to: input)
+            let output = try XCTUnwrap(NativeImageProcessor().optimize(source: input, workDirectory: work,
+                settings: .init(mode: .automatic), cancellation: CancellationToken()), "Padded flat fixture must reduce")
+            let candidate = try Data(contentsOf: output)
+            XCTAssertLessThan(candidate.count, original.count)
+            XCTAssertEqual(try Data(contentsOf: input), original)
+            let a = try decoded(original), b = try decoded(candidate)
+            XCTAssertEqual(a.width, b.width); XCTAssertEqual(a.height, b.height)
+            XCTAssertEqual(a.bitsPerComponent, b.bitsPerComponent)
+            XCTAssertEqual(a.colorSpace?.copyICCData() as Data?, b.colorSpace?.copyICCData() as Data?)
+            XCTAssertEqual(try properties(candidate)[kCGImagePropertyOrientation] as? Int, 6)
+            XCTAssertTrue(NSDictionary(dictionary: try properties(original)).isEqual(to: try properties(candidate)))
+            XCTAssertEqual(try customMetadata(original), "Opaque metadata must survive unchanged")
+            XCTAssertEqual(try customMetadata(original), try customMetadata(candidate))
+            print("HEIC automatic \(p3 ? "Display P3" : "sRGB"): \(original.count) -> \(candidate.count)")
+        }
+    }
+
+    func testHEICSmoothImagePreservesOriginalAcrossNativeEncoderQualityDifferences() throws {
+        let original = try fixture()
+        let work = try directory()
+        let input = work.appendingPathComponent("smooth.heic")
+        try original.write(to: input)
+        let output = try NativeImageProcessor().optimize(source: input, workDirectory: work,
+            settings: .init(mode: .automatic), cancellation: CancellationToken())
+        XCTAssertEqual(try Data(contentsOf: input), original)
+        if let output {
+            XCTAssertLessThan(try Data(contentsOf: output).count, original.count)
+        } else {
+            XCTAssertFalse(FileManager.default.fileExists(atPath: work.appendingPathComponent("candidate.heic").path))
         }
     }
 

@@ -16,7 +16,7 @@ Except for the IJG photographs identified below, image samples are generated fro
 - `grayscale.jpg`, `progressive.jpg`, `cmyk.jpg`, `icc-444.jpg`, and `degraded.jpg`: MozJPEG-generated variations of a deterministic pattern. The quality-10 sample exercises quality-gate rejection against a quality-100 reference.
 - `accepted-auto.jpg`: a smooth pattern, `RGB = 100 + (x / 3 + y / 3) / 8`, used to exercise accepted automatic recompression. `smooth-auto.jpg` exercises a conservative fallback.
 
-`sRGB.icc` is obtained from the system's `CGColorSpace.sRGB` and tests color-profile preservation. HEIC tests generate their own procedural samples through Image I/O at runtime. AVIF, GIF, and SVG samples have separate [AVIF](AVIF-README.md), [GIF](GIF-README.md), and [SVG](SVG-README.md) documentation.
+`sRGB.icc` is obtained from the system's `CGColorSpace.sRGB` and tests color-profile preservation. HEIC tests generate their own procedural samples through Image I/O at runtime. The positive HEIC sample uses a flat gray image and a valid removable `free` box, so native hardware/software encoder differences do not require lowering the RGB quality threshold; separate smooth and colorful samples cover fallback and quality rejection. AVIF, GIF, and SVG samples have separate [AVIF](AVIF-README.md), [GIF](GIF-README.md), and [SVG](SVG-README.md) documentation.
 
 Regenerate the main corpus after building the codec dependencies:
 

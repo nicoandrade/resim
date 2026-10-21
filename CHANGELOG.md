@@ -13,7 +13,7 @@ Notable changes to Resim are documented here. This file follows
 ### Fixed
 
 - The isolated launch check now uses a system tool to check external dependencies on clean macOS runners.
-- HEIC recompression coverage tries multiple procedural samples to accommodate native encoder differences while still requiring an accepted result in each color space.
+- HEIC coverage uses a portable padded sample for accepted optimization and checks safe fallback across native encoder differences without relaxing the RGB quality gate.
 
 ## 0.1.0 - 2026-10-20
 
