@@ -3,6 +3,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 identity="${SIGN_IDENTITY:--}"
+run_notarytool() {
+  if [[ -n "${NOTARY_KEYCHAIN:-}" ]]; then
+    xcrun notarytool "$@" --keychain "$NOTARY_KEYCHAIN"
+  else
+    xcrun notarytool "$@"
+  fi
+}
 if [[ "${REQUIRE_NOTARIZATION:-0}" == 1 && -z "${NOTARY_PROFILE:-}" ]]; then
   echo 'Public distribution requires NOTARY_PROFILE. See docs/DISTRIBUTION.md.' >&2
   exit 1
@@ -10,14 +17,14 @@ fi
 if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   [[ "$identity" != - ]] || { echo 'Notarization requires a Developer ID SIGN_IDENTITY.' >&2; exit 1; }
   # Validate authentication before rebuilding or replacing any distribution artifact.
-  xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" --output-format json >/dev/null
+  run_notarytool history --keychain-profile "$NOTARY_PROFILE" --output-format json >/dev/null
   mkdir -p .build
   notary_logs="$(mktemp -d "$PWD/.build/notarization.XXXXXX")"
   printf 'Notarization receipts: %s\n' "$notary_logs"
 fi
 notarize() {
   local artifact="$1" receipt="$notary_logs/$2.json" submission_exit=0
-  xcrun notarytool submit "$artifact" --keychain-profile "$NOTARY_PROFILE" \
+  run_notarytool submit "$artifact" --keychain-profile "$NOTARY_PROFILE" \
     --wait --output-format json >"$receipt" || submission_exit=$?
   cat "$receipt"
   [[ "$submission_exit" == 0 ]] || return "$submission_exit"

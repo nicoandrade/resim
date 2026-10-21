@@ -69,10 +69,93 @@ For each public release:
    downloaded checksum matches the finalized package.
 
 The repository and release must be public for anonymous downloads. No landing
-redeploy or per-visitor API request is needed for later app releases. Creating a
-release does not build or upload the DMG automatically; attach the packaged assets
-before publishing it. Local ad hoc packages remain outside the public-release
-requirements above, even though they also receive the stable filenames.
+redeploy or per-visitor API request is needed for later app releases. Use the tag
+workflow below to build and publish automatically. Creating a release manually
+does not trigger that workflow; upload verified assets before publishing it.
+Local ad hoc packages remain outside the public-release requirements above,
+even though they also receive the stable filenames.
+
+## Automated GitHub releases
+
+The [release workflow](../.github/workflows/release.yml) runs when a stable
+`vMAJOR.MINOR.PATCH` tag is pushed. It builds Universal 2 from clean checkouts,
+smoke-tests and runs the test suite separately on Apple Silicon and Intel, then
+signs the tested app in a disposable GitHub-hosted macOS runner. It notarizes and
+staples both app and DMG using `scripts/package.sh`, and requires the strict
+package verifier to pass. It uploads `Resim.dmg` and `Resim.dmg.sha256` to a
+draft, compares GitHub's uploaded SHA-256 digests and sizes, and only then
+publishes and marks the release Latest. Finally it downloads both fixed URLs
+without authentication and compares them with the verified local assets.
+
+Failures before publication leave the previous Latest release in place. A failed
+upload can leave a draft; rerunning the same workflow can resume that draft.
+Existing published versions are never overwritten, and a version older than or
+equal to Latest cannot replace the landing download. If the final anonymous
+download check fails after publication, the workflow reports failure; inspect
+the public assets before taking any manual corrective action.
+
+### One-time signing configuration
+
+Create a GitHub environment named `release`, limited to branch `main` (manual
+rehearsals) and tags `v*`. Put the following **environment secrets** there,
+using [GitHub's environment settings](https://github.com/nicoandrade/resim/settings/environments):
+
+| Secret | Value |
+| --- | --- |
+| `DEVELOPER_ID_P12_BASE64` | Base64 of a password-protected `.p12` containing exactly one valid Developer ID Application certificate **and its private key**. Export only that identity from Keychain Access. |
+| `DEVELOPER_ID_P12_PASSWORD` | Password used to protect that export. |
+| `NOTARY_APPLE_ID` | Apple account authorized for notarization. |
+| `NOTARY_APP_PASSWORD` | An Apple app-specific password, rather than the account password. |
+| `NOTARY_TEAM_ID` | The Apple Developer team that issued the signing certificate. |
+
+Load credentials directly into GitHub; never put them in source, command literals,
+logs, issues, or chat. For the exported certificate, run `base64 -i /path/to/DeveloperID.p12 | pbcopy`
+locally, paste into the GitHub secret field, then clear the clipboard. The remaining
+secrets can be entered directly in the settings UI, or using the hidden interactive
+prompt from `gh secret set SECRET_NAME --repo nicoandrade/resim --env release`.
+The workflow generates its own temporary keychain password. It removes the P12,
+deletes the keychain in a `finally` block, and never uploads raw signing logs or
+notarization reports as workflow artifacts. It uses no permanent GitHub token:
+publication receives the workflow's limited `GITHUB_TOKEN`.
+
+An existing local `notarytool` profile does not automatically become a GitHub
+secret. The workflow checks that all five secrets exist before starting a signed
+build. Check the certificate's expiry and rotate the certificate or app-specific
+password through the same environment when needed.
+
+This follows [GitHub's signing guidance](https://docs.github.com/en/actions/how-tos/deploy/deploy-to-third-party-platforms/sign-xcode-applications)
+and [Apple's notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+Keep the standard build/test workflow free of signing credentials. Do not run
+secret-bearing release jobs for pull requests or from a self-hosted runner.
+
+### Publish the next version
+
+1. Update `MARKETING_VERSION` and the build number in `scripts/generate-project.py`,
+   run the generator, and add the matching dated section to `CHANGELOG.md`.
+2. Commit and push the reviewed source to `main`. The tag must identify a commit
+   on `main`, and its version must match the authoritative app version and notes.
+3. Push the matching tag, for example after preparing version `0.1.1`:
+
+   ```sh
+   git tag -a v0.1.1 -m 'Resim 0.1.1'
+   git push origin v0.1.1
+   ```
+
+The workflow publishes the release; do not create a public release ahead of it.
+No change to the landing is needed. Do not move or reuse published tags.
+
+### Rehearse without publishing
+
+Run **Publish signed macOS release** from Actions with branch `main` and mode
+`check` to verify clean builds and tests without Apple secrets. Mode `sign` also
+checks signing, notarization, stapling, and Gatekeeper using the environment
+secrets, but does not create, upload, publish, or modify a GitHub release or tag.
+No signed rehearsal binaries or raw reports are retained after the job ends.
+
+```sh
+gh workflow run release.yml --repo nicoandrade/resim --ref main -f mode=check
+gh workflow run release.yml --repo nicoandrade/resim --ref main -f mode=sign
+```
 
 ## Rejected or interrupted submissions
 

@@ -42,6 +42,7 @@ jobs:
       - name: Check publication files
         run: |
           python3 scripts/check-public-repo.py
+          python3 scripts/test-github-release.py
           git diff --check
       # Each job starts without downloaded sources, codec outputs or DerivedData.
       - name: Build Universal 2 Release

@@ -11,7 +11,7 @@ app="$scratch/Resim.app"
 for bin in "$app/Contents/MacOS/Resim" "$app/Contents/Resources/Codecs/oxipng"; do
   lipo "$bin" -verify_arch arm64
   lipo "$bin" -verify_arch x86_64
-  if otool -L "$bin" | tail -n +2 | rg '/opt/homebrew|/usr/local|vendor/'; then
+  if otool -L "$bin" | tail -n +2 | /usr/bin/grep -E '/opt/homebrew|/usr/local|vendor/'; then
     echo 'Unexpected external dependency' >&2; exit 1
   fi
 done
