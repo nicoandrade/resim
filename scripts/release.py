@@ -23,13 +23,21 @@ def git(*args, cwd=ROOT):
     return subprocess.check_output(['git', *args], cwd=cwd, text=True).strip()
 
 
+def source_is_clean(source):
+    # Git attributes normalize upstream notices that Cargo may rewrite as CRLF.
+    # Compare against HEAD, including staged changes and executable permissions.
+    result = subprocess.run(['git', 'diff', '--quiet', 'HEAD'], cwd=source,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    return result.returncode == 0 and not git('ls-files', '--others', '--exclude-standard', '-z', cwd=source)
+
+
 def validate_checkout():
     allowed = {f'https://github.com/{github.REPOSITORY}', f'git@github.com:{github.REPOSITORY}',
                f'ssh://git@github.com/{github.REPOSITORY}'}
     origin = git('remote', 'get-url', 'origin').rstrip('/').removesuffix('.git')
     github.require(origin in allowed, 'origin must identify the intended GitHub repository.')
     github.require(git('branch', '--show-current') == 'main', 'Run the release from main.')
-    github.require(not git('status', '--porcelain'), 'Commit and push source changes before releasing.')
+    github.require(source_is_clean(ROOT), 'Commit and push source changes before releasing.')
     subprocess.run(['git', 'fetch', '--quiet', 'origin', 'main', '--tags'], cwd=ROOT, check=True)
     sha = git('rev-parse', 'HEAD')
     github.require(sha == git('rev-parse', 'origin/main'), 'Local main and origin/main must match.')
@@ -154,7 +162,7 @@ def execute(args):
             ('publication-after', [sys.executable, 'scripts/check-public-repo.py']),
         ]:
             run_step(label, command, source, environment, directory)
-        github.require(not git('status', '--porcelain', cwd=source), 'Build or tests changed published source files.')
+        github.require(source_is_clean(source), 'Build or tests changed published source files.')
         package_environment = dict(environment, **signing, SKIP_BUILD='1', REQUIRE_NOTARIZATION='1')
         run_step('signed-package', ['bash', 'scripts/package.sh'], source, package_environment, directory)
         github.local_assets(tag)

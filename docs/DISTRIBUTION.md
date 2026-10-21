@@ -126,7 +126,8 @@ without compiled codec outputs or DerivedData; download caches can be reused.
 Source edits made during the build cannot change that snapshot.
 
 It builds Universal 2, checks launch, runs the host-architecture tests and source
-publication checks, and requires generated source to remain unchanged. It signs
+publication checks, and requires generated source to retain its Git content and
+executable permissions (including `.gitattributes` line-ending normalization). It signs
 and notarizes the app and DMG using `scripts/package.sh`, staples both tickets,
 and requires strict signature, architecture, Gatekeeper, and checksum verification.
 

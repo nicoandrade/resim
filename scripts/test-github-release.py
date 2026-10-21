@@ -157,11 +157,23 @@ class LocalReleaseTests(unittest.TestCase):
             run.assert_not_called()
 
     def test_preflight_rejects_uncommitted_source(self):
-        with patch.object(local, 'git', side_effect=[f'https://github.com/{local.github.REPOSITORY}.git', 'main', ' M source']), \
+        with patch.object(local, 'git', side_effect=[f'https://github.com/{local.github.REPOSITORY}.git', 'main']), \
+                patch.object(local, 'source_is_clean', return_value=False), \
                 patch.object(local.subprocess, 'run') as run:
             with self.assertRaisesRegex(RuntimeError, 'Commit and push'):
                 local.validate_checkout()
             run.assert_not_called()
+
+    def test_source_comparison_uses_git_content_and_rejects_untracked_files(self):
+        with patch.object(local.subprocess, 'run', return_value=SimpleNamespace(returncode=0)) as run, \
+                patch.object(local, 'git', return_value='') as git:
+            self.assertTrue(local.source_is_clean(self.root))
+            self.assertEqual(run.call_args.args[0], ['git', 'diff', '--quiet', 'HEAD'])
+            git.assert_called_once_with('ls-files', '--others', '--exclude-standard', '-z', cwd=self.root)
+            git.return_value = 'unexpected-file\0'
+            self.assertFalse(local.source_is_clean(self.root))
+        with patch.object(local.subprocess, 'run', return_value=SimpleNamespace(returncode=1)):
+            self.assertFalse(local.source_is_clean(self.root))
 
     def test_existing_keychain_profile_is_used_without_export(self):
         (self.root / 'local').mkdir()
@@ -233,13 +245,14 @@ class LocalReleaseTests(unittest.TestCase):
         with patch.object(local.sys, 'platform', 'darwin'), \
                 patch.object(local, 'build_environment', return_value={}), \
                 patch.object(local, 'validate_checkout', return_value='sha'), \
+                patch.object(local, 'source_is_clean', return_value=True), \
                 patch.object(local.github, 'source_tag', return_value='v0.2.0'), \
                 patch.object(local.github, 'release_notes'), \
                 patch.object(local.github, 'validate_new_version'), \
                 patch.object(local, 'validate_tag'), \
                 patch.object(local, 'signing_configuration', return_value=dict(SIGN_IDENTITY='identity', NOTARY_PROFILE='test-profile')), \
                 patch.object(local.subprocess, 'run', return_value=SimpleNamespace(returncode=0)), \
-                patch.object(local, 'git', side_effect=['sha', '']), \
+                patch.object(local, 'git', return_value='sha'), \
                 patch.object(local, 'run_step', side_effect=step), \
                 patch.object(local.github, 'local_assets', side_effect=lambda tag: events.append('verified')), \
                 patch.object(local, 'wait_for_ci', side_effect=lambda *a: events.append('ci')), \
