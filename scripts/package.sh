@@ -81,4 +81,11 @@ ditto "$app" "$PWD/dist/Resim.app"
 (cd "$PWD/dist" && shasum -a 256 "$(basename "$dmg")") > "$dmg.sha256"
 printf '\nApp: %s/dist/Resim.app\nDMG: %s\n' "$PWD" "$dmg"
 if [[ -n "${NOTARY_PROFILE:-}" ]]; then python3 scripts/verify-package.py --require-notarized; fi
+# GitHub's latest/download URL requires the same asset name in every release.
+# Copy only after signing, stapling and any required verification have finished.
+cp "$dmg" "$staging/Resim.dmg"
+mv -f "$staging/Resim.dmg" "$PWD/dist/Resim.dmg"
+(cd "$PWD/dist" && shasum -a 256 Resim.dmg) > "$staging/Resim.dmg.sha256"
+mv -f "$staging/Resim.dmg.sha256" "$PWD/dist/Resim.dmg.sha256"
+printf 'Latest-release assets: %s/dist/Resim.dmg and Resim.dmg.sha256\n' "$PWD"
 if [[ -z "${NOTARY_PROFILE:-}" ]]; then echo 'Notarization pending: configure NOTARY_PROFILE for public distribution.'; fi

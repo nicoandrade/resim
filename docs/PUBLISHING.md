@@ -1,7 +1,8 @@
 # Publishing the source repository
 
-The local repository starts on `main`. Creating the GitHub repository, the first
-commit, and pushing are separate steps. No repository URL is configured yet.
+Use `main` for the source repository. Creating the GitHub repository, committing,
+and pushing are separate steps that require explicit authorization. Inspect the
+current Git history and remote configuration before publishing.
 
 ## Review the source
 

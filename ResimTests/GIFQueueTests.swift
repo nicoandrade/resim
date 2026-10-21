@@ -165,7 +165,13 @@ final class GIFQueueTests: XCTestCase {
         result.append(contentsOf: [3, 1] + word(3) + [0])
         for (frame, delay) in [7, 13, 25].enumerated() {
             result.append(contentsOf: [0x21, 0xF9, 4, 4] + word(delay) + [0, 0])
-            result.append(contentsOf: [0x2C] + word(0) + word(0) + word(width) + word(height) + [0, 2])
+            // Separate the descriptor fields to keep Swift 6.2 type checking bounded.
+            result.append(0x2C)
+            result.append(contentsOf: word(0))
+            result.append(contentsOf: word(0))
+            result.append(contentsOf: word(width))
+            result.append(contentsOf: word(height))
+            result.append(contentsOf: [0, 2])
             var compressed = [UInt8]()
             compressed.reserveCapacity(width * height * 3 / 4 + 1)
             var accumulator = 0, available = 0
