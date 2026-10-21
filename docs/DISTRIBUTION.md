@@ -1,6 +1,16 @@
 # Distribution
 
-`scripts/package.sh` creates a Universal 2 app, a compressed DMG with an Applications shortcut and `README.txt`, and SHA-256 files. Its output is `dist/Resim.app`, `dist/Resim-VERSION.dmg`, and `dist/Resim-VERSION.dmg.sha256`, using the app's version. After signing, stapling, and any required verification finish, it also prepares an identical `dist/Resim.dmg` and its `dist/Resim.dmg.sha256` for GitHub Releases.
+`scripts/package.sh` creates a Universal 2 app, a compressed DMG with an Applications shortcut and a themed drag-to-install window, and SHA-256 files. Its output is `dist/Resim.app`, `dist/Resim-VERSION.dmg`, and `dist/Resim-VERSION.dmg.sha256`, using the app's version. After signing, stapling, and any required verification finish, it also prepares an identical `dist/Resim.dmg` and its `dist/Resim.dmg.sha256` for GitHub Releases.
+
+The installer shows Resim and Applications over a subtle version of the landing's
+sunset landscape, with directional chevrons. `README.txt` remains included but
+hidden to keep the install window simple. Background resources are in
+`resources/dmg/`; the Retina background is generated locally using AppKit.
+`scripts/create-dmg.sh` installs the pinned `dmgbuild` tooling into an ignored
+`.build/dmg-tools` virtual environment on first use (network access required).
+It writes Finder settings directly, without GUI scripting or Automation access.
+Each package mounts the completed image read-only and checks the saved layout,
+background, hidden instructions, Applications link, and mounted app signature.
 
 ## Local package
 

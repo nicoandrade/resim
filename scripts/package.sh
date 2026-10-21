@@ -69,12 +69,10 @@ if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   xcrun stapler staple "$app"
   xcrun stapler validate "$app"
 fi
-ln -s /Applications "$staging/Applications"
 rm -f "$staging/Resim-notary.zip"
-cp docs/README.txt "$staging/README.txt"
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
 dmg="$PWD/dist/Resim-$version.dmg"
-hdiutil create -volname Resim -srcfolder "$staging" -ov -format UDZO "$dmg"
+bash scripts/create-dmg.sh "$app" "$dmg"
 if [[ "$identity" != - ]]; then codesign --force --timestamp --sign "$identity" "$dmg"; fi
 if [[ -n "${NOTARY_PROFILE:-}" ]]; then
   notarize "$dmg" dmg

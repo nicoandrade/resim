@@ -1,5 +1,6 @@
 #!/usr/bin/swift
 import AppKit
+import CoreImage
 import Foundation
 
 let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
@@ -35,8 +36,25 @@ defer { try? FileManager.default.removeItem(at: temporary) }
 let rendered = temporary.appendingPathComponent("rendered.png")
 _ = try output(renderer, arguments: [source.path, "--export-image", "--output-file", rendered.path,
                                     "--platform", "macOS", "--rendition", "Default", "--width", "1024",
-                                    "--height", "1024", "--scale", "1", "--design-generation", "27"])
+                                    "--height", "1024", "--scale", "4", "--design-generation", "27"])
 guard let logo = NSImage(contentsOf: rendered), logo.isValid else { fatalError("Could not read the Icon Composer render") }
+// The Composer render touches the canvas edges. Its very bright outer rim can
+// turn into disconnected white pixels when Finder resamples the legacy icon.
+// Inset the alpha contour by twelve design points, retaining the original artwork
+// and material inside it. Padding gives the flat edges transparent neighbors too.
+let original = CIImage(contentsOf: rendered)!
+let transparent = CIImage(color: .clear).cropped(to: original.extent.insetBy(dx: -64, dy: -64))
+let mask = original.composited(over: transparent)
+    .applyingFilter("CIMorphologyMinimum", parameters: [kCIInputRadiusKey: 48])
+let cleaned = original.applyingFilter("CIBlendWithAlphaMask", parameters: [
+    kCIInputBackgroundImageKey: transparent,
+    kCIInputMaskImageKey: mask,
+])
+let renderContext = CIContext()
+guard let cleanImage = renderContext.createCGImage(cleaned, from: original.extent) else {
+    fatalError("Could not smooth the icon contour")
+}
+let cleanLogo = NSImage(cgImage: cleanImage, size: logo.size)
 var entries: [[String: String]] = []
 for points in [16, 32, 128, 256, 512] {
     for scale in [1, 2] {
@@ -54,7 +72,7 @@ for points in [16, 32, 128, 256, 512] {
         context.interpolationQuality = .high
         // Composer provides the gradient, glass relief, lighting and mask. Standard
         // macOS padding keeps the legacy icon consistent with neighboring Dock apps.
-        logo.draw(in: NSRect(x: 64, y: 64, width: 896, height: 896),
+        cleanLogo.draw(in: NSRect(x: 64, y: 64, width: 896, height: 896),
                   from: .zero, operation: .sourceOver, fraction: 1)
         NSGraphicsContext.restoreGraphicsState()
         let filename = "icon_\(points)x\(points)\(scale == 2 ? "@2x" : "").png"

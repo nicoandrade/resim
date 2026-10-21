@@ -27,6 +27,8 @@ checks['app_dependencies']=run('otool app -L',['/usr/bin/otool','-L',str(app/'Co
 checks['helper_dependencies']=run('otool oxipng -L',['/usr/bin/otool','-L',str(app/'Contents/Resources/Codecs/oxipng')])
 checks['app_entitlements']=run('codesign app entitlements',['/usr/bin/codesign','-d','--entitlements','-',str(app)])
 checks['dmg_integrity']=run('hdiutil verify',['/usr/bin/hdiutil','verify',str(dmg)])
+checks['dmg_layout']=run('verify installer layout',[str(root/'.build/dmg-tools/bin/python'),str(root/'scripts/verify-dmg-layout.py'),str(dmg)])
+assert checks['dmg_layout']['exit_code']==0,'Installer layout verification failed'
 checks['gatekeeper_app']=run('spctl app execute',['/usr/sbin/spctl','--assess','--type','execute','--verbose=4',str(app)])
 checks['gatekeeper_dmg']=run('spctl dmg open',['/usr/sbin/spctl','--assess','--type','open','--context','context:primary-signature','--verbose=2',str(dmg)])
 checks['stapler_app']=run('stapler app validate',['/usr/bin/xcrun','stapler','validate',str(app)])

@@ -4,7 +4,18 @@ Notable changes to Resim are documented here. This file follows
 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [Unreleased]
+
+## [0.2.1] - 2026-10-21
+
+### Changed
+
+- The DMG opens with a subtle sunset background, Resim and Applications icons, and directional arrows for drag-to-install. The layout supports Retina displays and keeps the included instructions hidden.
+- Packaging verifies the mounted installer's background, icon positions, Applications shortcut, and app signature before preparing release assets.
+
+### Fixed
+
+- Removed the fragmented white highlights around the app icon's edges at small Finder sizes while preserving its colors and interior glass relief.
 
 ## 0.2.0 - 2026-10-21
 
@@ -39,3 +50,6 @@ Initial release prepared locally.
 ### Fixed
 
 - Bound Swift 6.2 type-checking work when constructing animated GIF test fixtures so the test suite can compile reliably.
+
+[Unreleased]: https://github.com/nicoandrade/resim/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/nicoandrade/resim/compare/v0.2.0...v0.2.1
