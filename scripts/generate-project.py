@@ -113,7 +113,7 @@ base_settings = dict(MACOSX_DEPLOYMENT_TARGET='14.0', SDKROOT='macosx', SWIFT_VE
                      SWIFT_STRICT_CONCURRENCY='complete', SWIFT_EMIT_LOC_STRINGS='YES', CLANG_ENABLE_MODULES='YES',
                      CLANG_ENABLE_OBJC_ARC='YES', GCC_C_LANGUAGE_STANDARD='c11',
                      ARCHS=['arm64', 'x86_64'], ONLY_ACTIVE_ARCH='NO',
-                     CURRENT_PROJECT_VERSION='9', MARKETING_VERSION='0.1.0',
+                     CURRENT_PROJECT_VERSION='10', MARKETING_VERSION='0.2.0',
                      GCC_WARN_ABOUT_RETURN_TYPE='YES_ERROR', CLANG_WARN_DOCUMENTATION_COMMENTS='YES')
 app_target = add('apptarget', 'PBXNativeTarget', name='Resim', buildConfigurationList=config_list('app', app_settings), buildPhases=[app_phase, frameworks, app_res], buildRules=[], dependencies=[], productName='Resim', productReference=app_product, productType='com.apple.product-type.application')
 proxy = add('proxy', 'PBXContainerItemProxy', containerPortal=ident('project'), proxyType=1, remoteGlobalIDString=app_target, remoteInfo='Resim')

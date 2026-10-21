@@ -116,10 +116,37 @@ final class HEICIntegrationTests: XCTestCase {
         }
     }
 
-    func testHEICAutomaticRejectsCandidateThatFailsPerRGBQuality() throws {
+    func testHEICConservativeRejectsCandidateThatFailsPerRGBQuality() throws {
         let original = try fixture(colorful: true)
         XCTAssertNil(try HEICProcessor().optimize(original, workDirectory: directory(),
-            settings: .init(), cancellation: CancellationToken()))
+            settings: .init(profile: .conservative), cancellation: CancellationToken()))
+    }
+
+    func testHEICProfilesPreservePresentationAndRespectQualityFloors() throws {
+        let original = try fixture(colorful: true, padded: true)
+        func pixels(_ image: CGImage) throws -> [UInt8] {
+            let context = try XCTUnwrap(CGContext(data: nil, width: image.width, height: image.height,
+                bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue))
+            context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+            return Array(UnsafeBufferPointer(start: try XCTUnwrap(context.data).assumingMemoryBound(to: UInt8.self), count: image.width * image.height * 4))
+        }
+        let image = try decoded(original), a = try pixels(image)
+        var previousSize = original.count
+        for profile in CompressionProfile.allCases {
+            let output = try HEICProcessor().optimize(original, workDirectory: directory(),
+                settings: .init(profile: profile), cancellation: CancellationToken())
+            let result = try output.map { try Data(contentsOf: $0) } ?? original
+            XCTAssertLessThanOrEqual(result.count, previousSize)
+            previousSize = result.count
+            XCTAssertTrue(NSDictionary(dictionary: try properties(original)).isEqual(to: try properties(result)))
+            XCTAssertEqual(try customMetadata(original), try customMetadata(result))
+            let candidate = try decoded(result)
+            XCTAssertEqual(image.width, candidate.width); XCTAssertEqual(image.height, candidate.height)
+            XCTAssertEqual(image.colorSpace?.copyICCData() as Data?, candidate.colorSpace?.copyICCData() as Data?)
+            XCTAssertEqual(rc_rgba_quality_rgb(a, try pixels(candidate), Int32(image.width), Int32(image.height), profile.codecValue), 1)
+        }
     }
 
     func testHEICOrdinaryTwelveMegapixelPhotoFitsReservedBudget() throws {

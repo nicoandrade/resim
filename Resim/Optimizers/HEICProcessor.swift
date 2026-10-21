@@ -42,40 +42,49 @@ nonisolated struct HEICProcessor {
         // Preserve rejection of unreadable or non-RGB inputs even when a native
         // lossless copy would return No Reduction, without retaining its CGImage.
         try validateInput(input)
-        guard let encoded = try encode(input, smallerThan: original.count, mode: settings.mode,
-                                       cancellation: cancellation) else { return nil }
-        guard let candidate = try? preserveOpaqueMetadata(originalItems, in: encoded),
-              candidate.count < original.count else { return nil }
-        try cancellation.check()
-        // The encoder and its autoreleased temporaries are gone before full-resolution
-        // validation. Recreate the source image only for a smaller candidate.
-        guard let decoded = CGImageSourceCreateImageAtIndex(input, 0, [kCGImageSourceShouldCache: false] as CFDictionary),
-              decoded.bitsPerComponent == 8, decoded.colorSpace?.model == .rgb else {
-            throw unsupported()
-        }
-        guard let (result, resultProperties, resultItems) = try? source(candidate) else { return nil }
-        guard NSDictionary(dictionary: properties).isEqual(to: resultProperties),
-              originalItems.map(\.key) == resultItems.map(\.key),
-              zip(originalItems, resultItems).allSatisfy({ $0.payload == $1.payload }),
-              let resultImage = CGImageSourceCreateImageAtIndex(result, 0, [kCGImageSourceShouldCache: false] as CFDictionary),
-              decoded.width == resultImage.width, decoded.height == resultImage.height,
-              decoded.bitsPerComponent == resultImage.bitsPerComponent,
-              decoded.colorSpace?.copyICCData() as Data? == resultImage.colorSpace?.copyICCData() as Data? else { return nil }
-        if settings.mode == .lossless {
-            guard exactSamples(decoded, resultImage) else { return nil }
-        } else {
-            let a = try rgba(decoded), b = try rgba(resultImage)
+        var best: Data?
+        // Always include a safe copy. Each lossy attempt starts from the admitted
+        // source, never the preceding candidate. Release native buffers per pass.
+        let attempts = Int(rc_profile_attempts(settings.codecProfile))
+        for step in -1..<attempts {
             try cancellation.check()
-            let valid = a.withUnsafeBytes { left in b.withUnsafeBytes { right in
-                rc_rgba_ssim_rgb(left.bindMemory(to: UInt8.self).baseAddress,
-                                 right.bindMemory(to: UInt8.self).baseAddress,
-                                 Int32(decoded.width), Int32(decoded.height))
-            }}
-            guard valid != 0 else { return nil }
+            let candidate: Data? = try autoreleasepool {
+                let quality: Double? = step < 0 ? nil : rc_profile_quality(settings.codecProfile, 3, Int32(step))
+                guard let encoded = try encode(input, smallerThan: best?.count ?? original.count,
+                                               quality: quality, cancellation: cancellation),
+                      let candidate = try? preserveOpaqueMetadata(originalItems, in: encoded),
+                      candidate.count < (best?.count ?? original.count) else { return nil }
+                try cancellation.check()
+                guard let decoded = CGImageSourceCreateImageAtIndex(input, 0, [kCGImageSourceShouldCache: false] as CFDictionary),
+                      decoded.bitsPerComponent == 8, decoded.colorSpace?.model == .rgb else { throw unsupported() }
+                guard let (result, resultProperties, resultItems) = try? source(candidate),
+                      NSDictionary(dictionary: properties).isEqual(to: resultProperties),
+                      originalItems.map(\.key) == resultItems.map(\.key),
+                      zip(originalItems, resultItems).allSatisfy({ $0.payload == $1.payload }),
+                      let resultImage = CGImageSourceCreateImageAtIndex(result, 0, [kCGImageSourceShouldCache: false] as CFDictionary),
+                      decoded.width == resultImage.width, decoded.height == resultImage.height,
+                      decoded.bitsPerComponent == resultImage.bitsPerComponent,
+                      decoded.colorSpace?.copyICCData() as Data? == resultImage.colorSpace?.copyICCData() as Data? else { return nil }
+                if quality == nil {
+                    guard exactSamples(decoded, resultImage) else { return nil }
+                } else {
+                    let a = try rgba(decoded), b = try rgba(resultImage)
+                    try cancellation.check()
+                    let valid = a.withUnsafeBytes { left in b.withUnsafeBytes { right in
+                        rc_rgba_quality_rgb(left.bindMemory(to: UInt8.self).baseAddress,
+                                            right.bindMemory(to: UInt8.self).baseAddress,
+                                            Int32(decoded.width), Int32(decoded.height), settings.codecProfile)
+                    }}
+                    guard valid != 0 else { return nil }
+                }
+                return candidate
+            }
+            if let candidate { best = candidate }
         }
         try cancellation.check()
+        guard let best else { return nil }
         let url = workDirectory.appendingPathComponent("candidate.heic")
-        try candidate.write(to: url, options: .atomic)
+        try best.write(to: url, options: .atomic)
         try cancellation.check()
         return url
     }
@@ -91,7 +100,7 @@ nonisolated struct HEICProcessor {
 
     /// Return only encoded bytes across this scope, so encoder sessions and their
     /// Foundation/ImageIO temporaries cannot overlap the validation buffers.
-    private func encode(_ input: CGImageSource, smallerThan originalBytes: Int, mode: OptimizationMode,
+    private func encode(_ input: CGImageSource, smallerThan originalBytes: Int, quality: Double?,
                         cancellation: CancellationToken) throws -> Data? {
         try autoreleasepool {
             try cancellation.check()
@@ -99,13 +108,13 @@ nonisolated struct HEICProcessor {
             guard let destination = CGImageDestinationCreateWithData(output, "public.heic" as CFString, 1, nil) else {
                 throw ProcessingError.unavailable(String(localized: "The HEIC encoder is not available on this Mac."))
             }
-            if mode == .lossless {
+            if quality == nil {
                 // Copy the encoded image without HEVC recompression. An unavailable
                 // or non-improving native copy remains a valid No Reduction result.
                 guard CGImageDestinationCopyImageSource(destination, input, nil, nil) else { return nil }
             } else {
                 CGImageDestinationAddImageFromSource(destination, input, 0, [
-                    kCGImageDestinationLossyCompressionQuality: 0.85,
+                    kCGImageDestinationLossyCompressionQuality: quality!,
                     kCGImageDestinationOptimizeColorForSharing: false,
                     kCGImageDestinationEmbedThumbnail: false
                 ] as CFDictionary)

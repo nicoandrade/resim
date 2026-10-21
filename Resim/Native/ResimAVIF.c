@@ -7,11 +7,6 @@
 /* Keep AV1 in-process and bounded: one still image, 8-bit SDR and one codec thread.
  * The original file is never modified. Unknown properties are rejected because
  * moving an essential or ordered property into a new container can change meaning. */
-extern int rc_rgba_ssim_rgb(const uint8_t *, const uint8_t *, int, int);
-/* Quality 95 is deliberately conservative: 80 failed the per-channel 30 dB
- * SSIM gate on our smooth gradient fixture. Decoded validation remains decisive. */
-#define RC_AVIF_AUTOMATIC_QUALITY 95
-
 static void avif_message(char *error, size_t capacity, const char *text) {
     if (error && capacity) snprintf(error, capacity, "%s", text);
 }
@@ -106,7 +101,7 @@ static int pixels_equal(const avifImage *a, const avifImage *b) {
     for (int channel = AVIF_CHAN_Y; channel <= AVIF_CHAN_A; ++channel) if (!plane_equal(a, b, channel)) return 0;
     return 1;
 }
-static int quality_equal(const avifImage *a, const avifImage *b) {
+static int quality_equal(const avifImage *a, const avifImage *b, int profile) {
     if (!metadata_equal(a, b) || !plane_equal(a, b, AVIF_CHAN_A) || a->alphaPremultiplied) return 0;
     avifRGBImage x, y;
     avifRGBImageSetDefaults(&x, a); avifRGBImageSetDefaults(&y, b);
@@ -122,7 +117,7 @@ static int quality_equal(const avifImage *a, const avifImage *b) {
         for (uint32_t col = 0; col < a->width; ++col) if (xp[col * 4 + 3] == 0 && memcmp(xp + col * 4, yp + col * 4, 4)) { valid = 0; break; }
     }
     if (valid) valid = x.rowBytes == a->width * 4 && y.rowBytes == b->width * 4 &&
-        rc_rgba_ssim_rgb(x.pixels, y.pixels, (int)a->width, (int)a->height);
+        rc_rgba_quality_rgb(x.pixels, y.pixels, (int)a->width, (int)a->height, profile);
     avifRGBImageFreePixels(&x); avifRGBImageFreePixels(&y);
     return valid;
 }
@@ -133,7 +128,12 @@ int rc_avif_pixels_equal(const uint8_t *a, size_t an, const uint8_t *b, size_t b
 }
 int rc_avif_ssim_rgb(const uint8_t *a, size_t an, const uint8_t *b, size_t bn) {
     avifDecoder *x = read_avif(a, an, 1, NULL, 0), *y = read_avif(b, bn, 1, NULL, 0);
-    int result = x && y && quality_equal(x->image, y->image);
+    int result = x && y && quality_equal(x->image, y->image, 1);
+    if (x) avifDecoderDestroy(x); if (y) avifDecoderDestroy(y); return result;
+}
+int rc_avif_quality_rgb(const uint8_t *a, size_t an, const uint8_t *b, size_t bn, int profile) {
+    avifDecoder *x = read_avif(a, an, 1, NULL, 0), *y = read_avif(b, bn, 1, NULL, 0);
+    int result = rc_profile_attempts(profile) && x && y && quality_equal(x->image, y->image, profile);
     if (x) avifDecoderDestroy(x); if (y) avifDecoderDestroy(y); return result;
 }
 static int encode_candidate(const avifImage *image, int quality, avifRWData *output, char *error, size_t capacity) {
@@ -148,7 +148,7 @@ static int encode_candidate(const avifImage *image, int quality, avifRWData *out
     if (result != AVIF_RESULT_OK) avif_message(error, capacity, "Could not encode the AVIF safely.");
     avifEncoderDestroy(encoder); return result == AVIF_RESULT_OK;
 }
-int rc_avif_optimize(const uint8_t *bytes, size_t size, int automatic, int strip,
+int rc_avif_optimize(const uint8_t *bytes, size_t size, int profile, int strip,
                      RCShouldCancel callback, void *context, RCBuffer *output, char *error, size_t capacity) {
     output->bytes = NULL; output->size = 0;
     if (avif_cancelled(callback, context)) { avif_message(error, capacity, "Cancelled."); return 0; }
@@ -175,17 +175,17 @@ int rc_avif_optimize(const uint8_t *bytes, size_t size, int automatic, int strip
         }
         /* Preserve XMP: unknown namespaces may carry presentation or color semantics. */
     }
-    for (int pass = 0; success && pass < (automatic ? 2 : 1); ++pass) {
+    for (int pass = 0; success && pass < 1 + rc_profile_attempts(profile); ++pass) {
         if (avif_cancelled(callback, context)) { success = 0; break; }
         avifRWData encoded = AVIF_DATA_EMPTY;
         if (pass && image->alphaPremultiplied) break;
-        int encoded_ok = encode_candidate(image, pass ? RC_AVIF_AUTOMATIC_QUALITY : AVIF_QUALITY_LOSSLESS, &encoded, error, capacity);
+        int encoded_ok = encode_candidate(image, pass ? (int)rc_profile_quality(profile, 2, pass - 1) : AVIF_QUALITY_LOSSLESS, &encoded, error, capacity);
         /* Automatic recompression is optional: keep the validated strict result if it fails. */
         if (!encoded_ok && pass) { avifRWDataFree(&encoded); break; }
         success = encoded_ok;
         if (success && encoded.size < (best.size ? best.size : size) && !avif_cancelled(callback, context)) {
             avifDecoder *candidate = read_avif(encoded.data, encoded.size, 1, NULL, 0);
-            int accepted = candidate && (pass ? quality_equal(image, candidate->image) : pixels_equal(image, candidate->image));
+            int accepted = candidate && (pass ? quality_equal(image, candidate->image, profile) : pixels_equal(image, candidate->image));
             if (accepted) { avifRWDataFree(&best); best = encoded; encoded = (avifRWData)AVIF_DATA_EMPTY; }
             if (candidate) avifDecoderDestroy(candidate);
         }

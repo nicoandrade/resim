@@ -4,37 +4,72 @@ nonisolated enum OptimizationMode: String, Codable, CaseIterable, Sendable {
     case automatic, lossless
 }
 
+nonisolated enum CompressionProfile: String, Codable, CaseIterable, Sendable {
+    case conservative, web, maximum
+
+    var title: String {
+        switch self {
+        case .conservative: String(localized: "Conservative")
+        case .web: String(localized: "Web")
+        case .maximum: String(localized: "Maximum compression")
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .conservative: String(localized: "Prioritizes image fidelity with gentle compression.")
+        case .web: String(localized: "Adapts compression to each image to reduce size while keeping visual changes small. Recommended.")
+        case .maximum: String(localized: "Prioritizes smaller files. Some loss of detail may be visible.")
+        }
+    }
+
+    // Native policy values are stable; 0 remains the separate lossless mode.
+    var codecValue: Int32 {
+        switch self {
+        case .conservative: 1
+        case .web: 2
+        case .maximum: 3
+        }
+    }
+}
+
 nonisolated enum FileSaveMode: String, Codable, CaseIterable, Sendable {
     case replaceOriginal, copyBesideOriginal, copyToFolder
 }
 
 nonisolated struct OptimizationSettings: Hashable, Codable, Sendable {
     var mode: OptimizationMode = .automatic
+    var profile: CompressionProfile = .web
     var destination: URL? = nil
     var stripPersonalMetadata: Bool = false
     var fileSaveMode: FileSaveMode = .replaceOriginal
 
     init(mode: OptimizationMode = .automatic, destination: URL? = nil,
-         stripPersonalMetadata: Bool = false, fileSaveMode: FileSaveMode? = nil) {
+         stripPersonalMetadata: Bool = false, fileSaveMode: FileSaveMode? = nil,
+         profile: CompressionProfile = .web) {
         self.mode = mode
+        self.profile = profile
         self.destination = destination
         self.stripPersonalMetadata = stripPersonalMetadata
         self.fileSaveMode = fileSaveMode ?? (destination == nil ? .replaceOriginal : .copyToFolder)
     }
 
     private enum CodingKeys: String, CodingKey {
-        case mode, destination, stripPersonalMetadata, fileSaveMode
+        case mode, profile, destination, stripPersonalMetadata, fileSaveMode
     }
 
     init(from decoder: any Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         mode = try values.decode(OptimizationMode.self, forKey: .mode)
+        profile = try values.decodeIfPresent(CompressionProfile.self, forKey: .profile) ?? .web
         destination = try values.decodeIfPresent(URL.self, forKey: .destination)
         stripPersonalMetadata = try values.decode(Bool.self, forKey: .stripPersonalMetadata)
         // Existing saved preferences retain their copy behavior when upgrading.
         fileSaveMode = try values.decodeIfPresent(FileSaveMode.self, forKey: .fileSaveMode)
             ?? (destination == nil ? .copyBesideOriginal : .copyToFolder)
     }
+
+    var codecProfile: Int32 { mode == .lossless ? 0 : profile.codecValue }
 }
 
 nonisolated enum ImageFormat: String, Sendable {

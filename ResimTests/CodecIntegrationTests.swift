@@ -94,12 +94,12 @@ final class CodecIntegrationTests: XCTestCase {
     }
     func testAutomaticProducesOnlyValidatedSmallerCandidates() throws {
         for name in ["landscape.jpg", "already-compressed.jpg", "lossy.webp"] {
-            _ = try candidate(name, settings: .init(mode: .automatic))
+            _ = try candidate(name, settings: .init(mode: .automatic, profile: .conservative))
         }
     }
-    func testAutomaticQualityGateReportsRGBChannels() throws {
+    func testConservativeQualityGateReportsRGBChannels() throws {
         for name in ["landscape.jpg", "photo-ijg.jpg", "photo-quality100.jpg", "smooth-auto.jpg", "icc-444.jpg", "already-compressed.jpg", "lossy.webp"] {
-            let (original, output) = try candidate(name, settings: .init(mode: .automatic))
+            let (original, output) = try candidate(name, settings: .init(mode: .automatic, profile: .conservative))
             guard let output else { continue }
             var scores = [Float](repeating: 0, count: 5)
             let pass = original.withUnsafeBytes { a in output.withUnsafeBytes { b in
@@ -115,8 +115,8 @@ final class CodecIntegrationTests: XCTestCase {
             print("SSIM \(name) B/G/R/A/All \(scores)")
         }
     }
-    func testAutomaticRecompressionAcceptedAtCalibratedThreshold() throws {
-        let (original, result) = try candidate("accepted-auto.jpg", settings: .init(mode: .automatic))
+    func testConservativeRecompressionAcceptedAtCalibratedThreshold() throws {
+        let (original, result) = try candidate("accepted-auto.jpg", settings: .init(mode: .automatic, profile: .conservative))
         let output = try XCTUnwrap(result)
         var scores = [Float](repeating: 0, count: 5)
         let (coefficientsEqual, pass) = original.withUnsafeBytes { a in output.withUnsafeBytes { b in

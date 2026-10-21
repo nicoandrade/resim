@@ -428,15 +428,18 @@ final class PipelineTests: XCTestCase {
         let defaults = UserDefaults(suiteName: "ResimTests.settings.\(UUID().uuidString)")!
         let processor = PipelineProcessor(unchanged: true)
         let app = AppModel(processor: processor, defaults: defaults)
-        app.settings = OptimizationSettings(mode: .lossless, stripPersonalMetadata: true)
+        app.settings = OptimizationSettings(mode: .lossless, stripPersonalMetadata: true, profile: .conservative)
         app.addURLs([try fixture()])
         app.settings.mode = .automatic
+        app.settings.profile = .maximum
         XCTAssertTrue(app.hasActiveJobs)
         try await waitUntil { !app.hasActiveJobs }
         XCTAssertEqual(app.jobs.first?.settings.mode, .lossless)
         XCTAssertTrue(app.jobs.first?.settings.stripPersonalMetadata == true)
         let reloaded = AppModel(processor: processor, defaults: defaults)
         XCTAssertEqual(reloaded.settings.mode, .automatic)
+        XCTAssertEqual(reloaded.settings.profile, .maximum)
+        XCTAssertEqual(app.jobs.first?.settings.profile, .conservative)
         XCTAssertTrue(reloaded.settings.stripPersonalMetadata)
     }
 

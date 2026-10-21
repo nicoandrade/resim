@@ -49,14 +49,14 @@ nonisolated struct NativeImageProcessor: ImageProcessing {
         let result = original.withUnsafeBytes { raw in
             let bytes = raw.bindMemory(to: UInt8.self).baseAddress!
             if info.format == .jpeg {
-                return rc_jpeg_optimize(bytes, original.count, settings.mode == .automatic ? 1 : 0,
+                return rc_jpeg_optimize(bytes, original.count, settings.codecProfile,
                                         settings.stripPersonalMetadata ? 1 : 0, callback, context, &buffer, &error, error.count)
             }
             if info.format == .avif {
-                return rc_avif_optimize(bytes, original.count, settings.mode == .automatic ? 1 : 0,
+                return rc_avif_optimize(bytes, original.count, settings.codecProfile,
                                         settings.stripPersonalMetadata ? 1 : 0, callback, context, &buffer, &error, error.count)
             }
-            return rc_webp_optimize(bytes, original.count, settings.mode == .automatic ? 1 : 0,
+            return rc_webp_optimize(bytes, original.count, settings.codecProfile,
                                     settings.stripPersonalMetadata ? 1 : 0, callback, context, &buffer, &error, error.count)
         }
         try cancellation.check()

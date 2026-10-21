@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Resim · Comparación de perfiles</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#1c2928;background:#f3f5f1;color-scheme:light}*{box-sizing:border-box}body{margin:0}header,main{max-width:1440px;margin:auto;padding:26px 32px}header{padding-bottom:8px}h1{font-size:30px;font-weight:650;letter-spacing:-1px;margin:6px 0 10px}p{line-height:1.5;color:#52625f;max-width:900px}small,.eyebrow{color:#537369}.eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase}button,select,a.link{font:inherit;color:inherit;border:1px solid #c4cec4;background:white;border-radius:8px;padding:9px 13px;cursor:pointer}button[aria-pressed=true]{background:#173e34;color:white;border-color:#173e34}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #85ae83;outline-offset:3px}.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px}select{max-width:100%}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}.card{text-align:left;min-width:0;padding:16px;border-radius:12px}.card strong{display:block;font-size:15px;margin-bottom:10px}.card .bytes{display:block;font-size:25px;letter-spacing:-.5px}.card .saving{display:block;margin-top:7px;font-size:13px;opacity:.8}.card .time{display:block;font-size:12px;opacity:.65;margin-top:5px}.caption{display:flex;justify-content:space-between;gap:16px;margin-bottom:10px;font-size:13px}.viewport{height:540px;overflow:auto;border:1px solid #c4cec4;background:repeating-conic-gradient(#e8ece5 0% 25%,#fafbf8 0% 50%) 50%/20px 20px;border-radius:12px}.stage{position:relative;margin:auto;line-height:0}.stage img{display:block;width:100%;height:100%}.stage .overlay{position:absolute;inset:0;clip-path:inset(0 50% 0 0)}.stage .divider{position:absolute;top:0;bottom:0;left:50%;width:2px;background:white;box-shadow:0 0 0 1px #173e34;pointer-events:none}.slider{width:min(600px,100%);accent-color:#173e34}footer{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:16px}.link{text-decoration:none;font-size:13px}.note{font-size:13px;margin-top:20px}.empty{display:none}@media(max-width:700px){header,main{padding:18px}.cards{grid-template-columns:repeat(2,1fr)}h1{font-size:25px}.viewport{height:430px}}
+</style>
+<header><div class="eyebrow">Resim / Calibración visual</div><h1>Menos peso. ¿Cuánto detalle?</h1><p>Elegí una imagen y un perfil. Mové el divisor para comparar con el original o alterná entre ambas versiones. Revisá primero a tamaño de uso y después ampliá para encontrar artefactos.</p></header>
+<main>
+<div class="controls"><label for="sample">Imagen</label><select id="sample"></select><label for="zoom">Vista</label><select id="zoom"><option value="fit">Ajustar</option><option value="1">100% · 1 píxel de imagen por píxel CSS</option><option value="2">200%</option></select><span id="dimensions"></span></div>
+<div class="cards" id="cards"></div>
+<div class="caption"><span id="leftLabel">Perfil</span><span>Original</span></div>
+<div class="viewport" id="viewport"><div class="stage" id="stage"><img id="original" alt="Imagen original"><img class="overlay" id="candidate" alt="Imagen comprimida"><div class="divider" id="divider"></div></div></div>
+<footer><label for="split">Comparar</label><input id="split" class="slider" type="range" min="0" max="100" value="50"><button id="toggle" aria-pressed="false">Ver solo el perfil</button><a id="downloadOriginal" class="link" download>Original</a><a id="download" class="link" download>Descargar resultado</a></footer>
+<p class="note" id="note"></p><p class="note">Primera calibración: los umbrales automáticos no garantizan invisibilidad de los cambios. Se conserva formato, dimensiones y transparencia. PNG y WebP sin pérdida mantienen sus píxeles. Los pesos corresponden a los archivos comprimidos; las vistas se decodificaron a PNG, a resolución completa y con orientación aplicada. La foto IJG conserva su resolución original; el patrón de texto y degradados es sintético. No se sube ningún archivo.</p>
+</main>
+<script>
+const report=/* REPORT */;
+const $=id=>document.getElementById(id),labels={conservative:'Conservador',web:'Web · Predeterminado',maximum:'Máxima compresión'};
+let sampleIndex=0,profile='web',solo=false;
+const size=n=>n>=1048576?(n/1048576).toFixed(2)+' MB':(n/1024).toFixed(1)+' KB';
+report.samples.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=s.name;$('sample').append(o)});
+function split(){const value=solo?100:Number($('split').value);$('candidate').style.clipPath=`inset(0 ${100-value}% 0 0)`;$('divider').style.left=value+'%';$('divider').style.display=solo?'none':'';}
+function resize(){const s=report.samples[sampleIndex],z=$('zoom').value;const factor=z==='fit'?Math.min(1,($('viewport').clientWidth-2)/s.width,538/s.height):Number(z);$('stage').style.width=s.width*factor+'px';$('stage').style.height=s.height*factor+'px';}
+function render(){const s=report.samples[sampleIndex],r=s.results.find(x=>x.profile===profile);$('cards').replaceChildren();
+const entries=[{profile:'original',bytes:s.bytes,saved_percent:0},...s.results];
+entries.forEach(x=>{const b=document.createElement('button');b.className='card';b.setAttribute('aria-pressed',String(x.profile===profile));
+const title=document.createElement('strong');title.textContent=x.profile==='original'?'Original':labels[x.profile];b.append(title);
+const bytes=document.createElement('span');bytes.className='bytes';bytes.textContent=size(x.bytes);b.append(bytes);
+const saving=document.createElement('span');saving.className='saving';saving.textContent=x.profile==='original'?'Referencia':x.changed?x.saved_percent.toFixed(1)+'% menos peso':'Sin reducción segura';b.append(saving);
+if(x.milliseconds!==undefined){const time=document.createElement('span');time.className='time';time.textContent=(x.milliseconds/1000).toFixed(2)+' s';b.append(time)}
+b.onclick=()=>{if(x.profile==='original'){solo=false;$('split').value=0;split();$('toggle').setAttribute('aria-pressed','false');$('toggle').textContent='Ver solo el perfil'}else{profile=x.profile;$('split').value=50;render()}};$('cards').append(b)});
+$('original').src=s.preview;$('candidate').src=r.preview;$('leftLabel').textContent=labels[profile];$('dimensions').textContent=s.width+' × '+s.height+' · '+s.format.toUpperCase();$('download').href=r.file;$('downloadOriginal').href=s.file;
+$('note').textContent=(r.changed?'Resultado validado y más pequeño.':'Este perfil conserva el archivo: ningún candidato logró reducirlo cumpliendo las comprobaciones.')+(r.rgb_ssim_db?' SSIM mínimo RGB: '+Math.min(...r.rgb_ssim_db).toFixed(2)+' dB (mayor = más parecido).':'');resize();split();}
+$('sample').onchange=e=>{sampleIndex=Number(e.target.value);$('split').value=50;render()};$('zoom').onchange=resize;$('split').oninput=()=>{solo=false;$('toggle').setAttribute('aria-pressed','false');$('toggle').textContent='Ver solo el perfil';split()};$('toggle').onclick=()=>{solo=!solo;$('toggle').setAttribute('aria-pressed',String(solo));$('toggle').textContent=solo?'Volver al divisor':'Ver solo el perfil';split()};window.addEventListener('resize',resize);render();
+</script>
+</html>

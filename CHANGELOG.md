@@ -6,14 +6,22 @@ Notable changes to Resim are documented here. This file follows
 
 ## Unreleased
 
+## 0.2.0 - 2026-10-21
+
 ### Added
 
+- Conservative, Web, and Maximum compression profiles, with adaptive quality searches for JPEG, lossy WebP, AVIF, and HEIC. Each profile keeps the smallest candidate that passes its visual-quality and preservation checks.
+- A technical README table describing encoder quality levels and validation thresholds, plus a local before/after comparison tool for reviewing file size and image detail.
 - Local release automation builds from a clean clone, tests, signs and notarizes through the Mac's Keychain, then publishes the DMG and SHA-256 checksum as Latest on GitHub. The landing keeps its permanent download URL, and no Apple signing credentials are stored on GitHub.
+
+### Changed
+
+- Web is now the default profile for automatic optimization, including saved settings without a profile. Explicit Lossless, file-saving, and privacy preferences are retained. PNG, GIF, SVG, and lossless WebP keep their lossless behavior across profiles.
 
 ### Fixed
 
 - The isolated launch check now uses a system tool to check external dependencies on clean macOS runners.
-- HEIC coverage uses a portable padded sample for accepted optimization and checks safe fallback across native encoder differences without relaxing the RGB quality gate.
+- HEIC coverage uses a portable padded sample for accepted optimization and checks safe fallback across native encoder differences without relaxing the Conservative RGB quality gate.
 
 ## 0.1.0 - 2026-10-20
 

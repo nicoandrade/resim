@@ -44,7 +44,8 @@ final class BenchmarkTests: XCTestCase {
                                                 b.bindMemory(to: UInt8.self).baseAddress, b.count, &scores)
                     }}
                     quality["ssim_db_bgra_all"] = scores.map { $0.isFinite ? Double($0) : -1 }
-                    quality["passes_rgb_gate"] = pass == 1
+                    quality["passes_rgb_gate"] = mode == .lossless ? pass == 1 : scores.prefix(3).allSatisfy { $0.isFinite && $0 >= rc_profile_min_ssim_db(2) }
+                    quality["profile"] = mode == .lossless ? "lossless" : "web"
                     if name.hasSuffix("jpg") {
                         quality["identical_dct"] = original.withUnsafeBytes { a in candidate.withUnsafeBytes { b in
                             rc_jpeg_coefficients_equal(a.bindMemory(to: UInt8.self).baseAddress, a.count, b.bindMemory(to: UInt8.self).baseAddress, b.count) == 1

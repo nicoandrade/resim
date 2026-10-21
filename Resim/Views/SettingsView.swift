@@ -143,14 +143,39 @@ struct SettingsView: View {
                         .accessibilityIdentifier("settings-optimization-mode")
                     }
                 }
+                if model.settings.mode == .automatic {
+                    SettingsDivider()
+                    SettingsRow {
+                        HStack {
+                            Text("Compression profile")
+                            Spacer(minLength: 16)
+                            Picker("Compression profile", selection: $model.settings.profile) {
+                                ForEach(CompressionProfile.allCases, id: \.self) { profile in
+                                    Text(profile.title).tag(profile)
+                                }
+                            }
+                            .labelsHidden()
+                            .fixedSize()
+                            .accessibilityIdentifier("settings-compression-profile")
+                        }
+                    }
+                }
                 SettingsDivider()
                 Text(model.settings.mode == .automatic
-                     ? String(localized: "May slightly change the image to reduce its file size further")
+                     ? model.settings.profile.description
                      : String(localized: "Preserves the image. Some images may not become smaller."))
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(14)
+                if model.settings.mode == .automatic {
+                    SettingsDivider()
+                    Text("Keeps the original format and dimensions. PNG, GIF and SVG always use lossless optimization.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(14)
+                }
             }
 
             SettingsSection(title: String(localized: "Files")) {

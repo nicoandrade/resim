@@ -26,15 +26,21 @@ Exact upstream notices are copied into `Resim/Resources/Licenses/`, including Ox
 - **AVIF:** AV1 lossless re-encoding must preserve decoded native YUV/alpha planes, color parameters, ICC, EXIF/XMP, crop, pixel aspect ratio, rotation, and mirroring. Lossless describes preservation of decoded samples; it does not identify whether the input was originally encoded lossily.
 - **GIF:** both modes use Gifsicle optimization level 2 with empty frames retained. `gifdiff` checks rendered equivalence. Structural validation also requires the same dimensions, aspect ratio, background color, individual raw delays, loop count, and retained metadata payloads at the same frame positions. Delta rectangles and disposal choices may change. There is no palette quantization, lossy LZW, or frame dropping.
 
-## Automatic recompression
+## Compression profiles
 
-PNG, GIF, and SVG retain their lossless paths. JPEG and WebP first compute a safe candidate, then try at most one recompression: JPEG quality 92 without reducing subsampling, or lossy WebP quality 90, method 4, and alpha quality 100. Lossless WebP is never converted to lossy. Unknown JPEG markers, metadata between scans, and uninterpretable WebP/XMP extensions can disable recompression.
+Automatic mode offers three ordered profiles. **Web** is the default, including when migrating preferences without a profile. Explicit Lossless mode and file-saving/privacy choices are retained. A selected profile is captured with each admitted job; changing settings cannot change queued work. Lossless mode overrides the profile.
 
-AVIF tries quality 95 from the same decoded original. HEIC tries Image I/O HEVC quality 0.85. HEIC remains restricted to 8-bit SDR RGB without sequences or auxiliary images; AVIF rejects HDR, gain maps, animation, progressive content, and unsupported container properties.
+The [README profile table](../README.md#compression-profile-settings) lists every format's quality candidates, fixed encoder settings, and per-profile quality floors.
 
-Lossy candidates must pass full-resolution validation with finite SSIM scores of at least 30 dB in every RGB channel. The libwebp distortion API returns B/G/R/A/All scores; acceptance uses the individual RGB channels. Alpha is checked exactly; AVIF also checks hidden RGB under zero alpha. Failed size, quality, or preservation checks prevent publication. JPEG and WebP can fall back to their safe candidates.
+These are initial calibration values for visual review, not universal web standards or percentages of retained visual quality. libwebp expresses SSIM in dB; these floors correspond approximately to SSIM 0.999, 0.990 and 0.975. They are **not PSNR**. Global metrics may miss local artifacts, and the smallest accepted result among these bounded trials is not necessarily the smallest perceptually acceptable encoding in existence.
 
-The threshold is a conservative acceptance rule, not a guarantee that every visual difference is imperceptible.
+Each attempt encodes the same admitted original; no candidate is recompressed. The smallest validated candidate wins, including the safe lossless candidate where available. No larger result is published. Web tries at most seven lossy levels, Maximum ten; this uses more CPU/time than Conservative. Attempts are sequential inside the existing bounded worker pool, with cancellation between attempts and native cancellation callbacks where available. Per-attempt validation buffers are released before the next attempt.
+
+Format and dimensions remain unchanged. PNG, GIF, SVG, and lossless WebP retain their lossless paths in all profiles. JPEG retains original subsampling and progressive coding. WebP uses method 4 and alpha quality 100. AVIF uses AOM speed 6 and lossless alpha. HEIC tries a native lossless copy before optional HEVC recompression. Unknown JPEG markers, metadata between scans, and uninterpretable WebP/XMP extensions can disable recompression.
+
+Lossy candidates must pass full-resolution validation with finite SSIM scores at or above the selected floor in **every** RGB channel. The libwebp distortion API returns B/G/R/A/All scores; acceptance uses the individual RGB channels. Alpha is checked exactly; AVIF also checks hidden RGB under zero alpha. Preservation checks are never relaxed by the selected profile. HEIC remains restricted to 8-bit SDR RGB without sequences or auxiliary images; AVIF rejects HDR, gain maps, animation, progressive content, and unsupported container properties.
+
+The native `rc_*_optimize` profile argument uses 0 for Lossless, 1 for Conservative (the previous automatic behavior), 2 for Web, and 3 for Maximum. Existing `rc_*_ssim_rgb` diagnostics retain their 30 dB contract; profile-aware checks use `rc_rgba_quality_rgb` or `rc_avif_quality_rgb`.
 
 ## Metadata and privacy
 

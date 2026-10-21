@@ -72,7 +72,7 @@ final class ReleaseQATests: XCTestCase {
             "processor_count": ProcessInfo.processInfo.processorCount,
             "physical_memory_bytes": ProcessInfo.processInfo.physicalMemory,
             "status": "in_progress", "idle_host_rss_bytes": idleRSS,
-            "method": "Real AppModel and QueueCoordinator with a timing-only NativeImageProcessor wrapper. Hosted XCTest on the current Mac. Host RSS includes the app, tests, fixture generation, independent output verification and allocator retention; child helpers are excluded. It is not standalone app RSS. Polling and MainActor heartbeat use 10 ms intervals. Codec timings exclude admission, snapshot and publication; batch timings include them, but exclude post-completion verification. JPEG lossless uses exact DCT coefficients. Other outputs are decoded independently with Apple Image I/O (SVG with AppKit); exact canonical RGBA for lossless, PNG and GIF, or 30 dB per-RGB SSIM for actual automatic raster recompression.",
+            "method": "Real AppModel and QueueCoordinator with a timing-only NativeImageProcessor wrapper. Hosted XCTest on the current Mac. Host RSS includes the app, tests, fixture generation, independent output verification and allocator retention; child helpers are excluded. It is not standalone app RSS. Polling and MainActor heartbeat use 10 ms intervals. Codec timings exclude admission, snapshot and publication; batch timings include them, but exclude post-completion verification. JPEG lossless uses exact DCT coefficients. Other outputs are decoded independently with Apple Image I/O (SVG with AppKit); exact canonical RGBA for lossless, PNG and GIF, or Web 20 dB per-RGB SSIM for actual automatic raster recompression.",
             "jpeg_decoder_note": "Apple Image I/O can round baseline and progressive JPEG IDCT differently despite identical coefficients (observed max 4/255 on the local corpus). DCT-exact JPEG outputs are reported as such, without claiming identical Apple-rendered RGBA. Actual JPEG recompression must still pass both native and independently decoded per-RGB SSIM gates.",
             "scope": "20 inputs per format, 140 per mode, seven formats, both modes. Raster dimensions vary from 1600x1200 to 3000x2000. Original patterns plus a redistributable IJG photograph and, when provided locally, an external photograph. IJG resizing exercises decoded dimensions, not additional photographic detail. GIF has three independently generated frames with 70/130/250 ms delays and infinite loop. SVG has 800 shapes, references, styles, metadata, title and text. No artificial padding is added to the large corpus.",
             "fixture_generation_in_performance_measurements": false
@@ -306,11 +306,11 @@ final class ReleaseQATests: XCTestCase {
             if exact == 1 { return "JPEG DCT coefficients exact; Apple baseline/progressive rounding may differ" }
             XCTAssertEqual(mode, .automatic, "Lossless JPEG must preserve every DCT coefficient")
             var scores = [Float](repeating: 0, count: 5)
-            let pass = original.withUnsafeBytes { a in candidate.withUnsafeBytes { b in
+            let _ = original.withUnsafeBytes { a in candidate.withUnsafeBytes { b in
                 rc_jpeg_ssim_rgb(a.bindMemory(to: UInt8.self).baseAddress, a.count,
                     b.bindMemory(to: UInt8.self).baseAddress, b.count, &scores)
             }}
-            XCTAssertEqual(pass, 1, "Actual JPEG recompression must also pass the native per-RGB quality gate")
+            XCTAssertTrue(scores.prefix(3).allSatisfy { $0.isFinite && $0 >= rc_profile_min_ssim_db(2) })
         }
         if sample.info.format == .svg {
             func render(_ url: URL) throws -> Data {
@@ -349,14 +349,14 @@ final class ReleaseQATests: XCTestCase {
                     XCTFail("Independent full-resolution RGBA must remain exact: \(sample.url.lastPathComponent), frame \(frame)")
                 } else {
                     let pass = a.withUnsafeBytes { x in b.withUnsafeBytes { y in
-                        rc_rgba_ssim_rgb(x.bindMemory(to: UInt8.self).baseAddress, y.bindMemory(to: UInt8.self).baseAddress,
-                            Int32(sample.info.width), Int32(sample.info.height))
+                        rc_rgba_quality_rgb(x.bindMemory(to: UInt8.self).baseAddress, y.bindMemory(to: UInt8.self).baseAddress,
+                            Int32(sample.info.width), Int32(sample.info.height), 2)
                     }}
                     XCTAssertEqual(pass, 1, "Independent Image I/O decode failed per-RGB quality: \(sample.url.lastPathComponent)")
                 }
             }
         }
-        return exact ? "Image I/O full-resolution RGBA exact, all frames" : "Image I/O full-resolution RGBA, 30 dB per-RGB SSIM"
+        return exact ? "Image I/O full-resolution RGBA exact, all frames" : "Image I/O full-resolution RGBA, Web 20 dB per-RGB SSIM"
     }
 
     private func makeCorpus() throws -> [Sample] {

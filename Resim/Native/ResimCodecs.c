@@ -13,6 +13,23 @@
 
 #define MAX_PIXELS 40000000ULL
 #define SSIM_MIN_DB 30.0f
+int rc_profile_attempts(int profile) {
+ return profile == 1 ? 1 : profile == 2 ? 7 : profile == 3 ? 10 : 0;
+}
+float rc_profile_min_ssim_db(int profile) {
+ return profile == 3 ? 16.f : profile == 2 ? 20.f : SSIM_MIN_DB;
+}
+double rc_profile_quality(int profile, int format, int attempt) {
+ static const double qualities[4][10] = {
+  {98, 95, 92, 88, 84, 80, 76, 70, 64, 58},
+  {98, 94, 90, 85, 80, 75, 70, 60, 50, 40},
+  {95, 90, 85, 80, 75, 65, 55, 45, 35, 25},
+  {.95, .90, .85, .80, .75, .70, .65, .55, .45, .35}
+ };
+ if(format < 0 || format > 3 || attempt < 0 || attempt >= rc_profile_attempts(profile)) return -1;
+ static const double conservative[4] = {92, 90, 95, .85};
+ return profile == 1 ? conservative[format] : qualities[format][attempt];
+}
 static void message(char *e, size_t n, const char *s) { if(e && n) snprintf(e,n,"%s",s); }
 void rc_buffer_free(RCBuffer *b) { free(b->bytes); b->bytes=NULL; b->size=0; }
 static int cancelled(RCShouldCancel cb,void *ctx){ return cb && cb(ctx); }
@@ -137,12 +154,12 @@ static int jpeg_auto_safe(const uint8_t*b,size_t n){
   ok=0;
  }jpeg_cleanup(s);return ok;
 }
-static int jpeg_encode(const uint8_t*b,size_t n,int lossy,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out){
+static int jpeg_encode(const uint8_t*b,size_t n,int quality,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out){
  JPEGState*s=jpeg_state();if(!s)return 0;
  if(setjmp(s->e.jump)){jpeg_cleanup(s);return 0;}
  if(!jpeg_header(s,b,n)){jpeg_cleanup(s);return 0;}
  jpeg_create_compress(&s->c);s->cc=1;jpeg_mem_dest(&s->c,&s->encoded,&s->encoded_size);
- if(!lossy){
+ if(!quality){
   jvirt_barray_ptr *coef=jpeg_read_coefficients(&s->d);jpeg_copy_critical_parameters(&s->d,&s->c);s->c.optimize_coding=TRUE;jpeg_simple_progression(&s->c);
   jpeg_disable_duplicate_markers(s);jpeg_write_coefficients(&s->c,coef);jpeg_markers(s,strip);
  }else{
@@ -150,7 +167,7 @@ static int jpeg_encode(const uint8_t*b,size_t n,int lossy,int strip,RCShouldCanc
   for(int k=0;k<components;k++){hs[k]=s->d.comp_info[k].h_samp_factor;vs[k]=s->d.comp_info[k].v_samp_factor;}
   s->d.out_color_space=s->d.jpeg_color_space==JCS_GRAYSCALE?JCS_GRAYSCALE:JCS_RGB;jpeg_start_decompress(&s->d);
   s->c.image_width=s->d.output_width;s->c.image_height=s->d.output_height;s->c.input_components=s->d.output_components;s->c.in_color_space=s->d.out_color_space;
-  jpeg_set_defaults(&s->c);if(s->d.jpeg_color_space==JCS_RGB)jpeg_set_colorspace(&s->c,JCS_RGB);s->c.density_unit=s->d.density_unit;s->c.X_density=s->d.X_density;s->c.Y_density=s->d.Y_density;jpeg_set_quality(&s->c,92,TRUE);
+  jpeg_set_defaults(&s->c);if(s->d.jpeg_color_space==JCS_RGB)jpeg_set_colorspace(&s->c,JCS_RGB);s->c.density_unit=s->d.density_unit;s->c.X_density=s->d.X_density;s->c.Y_density=s->d.Y_density;jpeg_set_quality(&s->c,quality,TRUE);
   if(s->c.num_components==components)for(int k=0;k<components;k++){s->c.comp_info[k].h_samp_factor=hs[k];s->c.comp_info[k].v_samp_factor=vs[k];}
   s->c.optimize_coding=TRUE;jpeg_simple_progression(&s->c);jpeg_disable_duplicate_markers(s);jpeg_start_compress(&s->c,TRUE);jpeg_markers(s,strip);
   size_t stride=(size_t)s->d.output_width*s->d.output_components;s->pixels=malloc(stride);if(!s->pixels){jpeg_cleanup(s);return 0;}
@@ -169,7 +186,7 @@ static uint8_t *jpeg_rgba(const uint8_t*b,size_t n,int*w,int*h){
  while(s->d.output_scanline<s->d.output_height){JSAMPROW row=s->pixels+stride*s->d.output_scanline;jpeg_read_scanlines(&s->d,&row,1);}jpeg_finish_decompress(&s->d);
  uint8_t*p=s->pixels;if(s->e.warnings)p=NULL;else s->pixels=NULL;jpeg_cleanup(s);return p;
 }
-static int similar_metrics(const uint8_t*a,const uint8_t*b,int w,int h,float*result){
+static int similar_metrics(const uint8_t*a,const uint8_t*b,int w,int h,float threshold,float*result){
  size_t count=(size_t)w*h;for(size_t k=0;k<count;k++)if(a[k*4+3]!=b[k*4+3])return 0;
  // Use the same libwebp SSIM plane operation without importing two full ARGB
  // images. This avoids 8 bytes per pixel of duplicate picture storage.
@@ -183,12 +200,16 @@ static int similar_metrics(const uint8_t*a,const uint8_t*b,int w,int h,float*res
  // Match WebPPictureDistortion's aggregate and exact-similarity cap precisely.
  if(ok){double mean=total_size>0.?total_distortion/total_size:1.;score[4]=mean<1.?(float)(-10.0*log10(1.-mean)):99.f;}
  // libwebp API order is B,G,R,A,All. Alpha is separately checked for equality above.
- for(int k=0;k<3;k++)if(!isfinite(score[k])||score[k]<SSIM_MIN_DB)ok=0;
+ for(int k=0;k<3;k++)if(!isfinite(score[k])||score[k]<threshold)ok=0;
  if(result)memcpy(result,score,sizeof score);return ok;
 }
 int rc_rgba_ssim_rgb(const uint8_t *a,const uint8_t *b,int w,int h){
  if(!a||!b||w<=0||h<=0||w>MAX_PIXELS/h)return 0;
- return similar_metrics(a,b,w,h,NULL);
+ return similar_metrics(a,b,w,h,SSIM_MIN_DB,NULL);
+}
+int rc_rgba_quality_rgb(const uint8_t *a,const uint8_t *b,int w,int h,int profile){
+ if(!a||!b||w<=0||h<=0||w>MAX_PIXELS/h||!rc_profile_attempts(profile))return 0;
+ return similar_metrics(a,b,w,h,rc_profile_min_ssim_db(profile),NULL);
 }
 int rc_jpeg_coefficients_equal(const uint8_t*a,size_t an,const uint8_t*b,size_t bn){
  JPEGState*x=jpeg_state(),*y=jpeg_state();if(!x||!y){jpeg_cleanup(x);jpeg_cleanup(y);return 0;}
@@ -209,14 +230,21 @@ int rc_jpeg_coefficients_equal(const uint8_t*a,size_t an,const uint8_t*b,size_t 
  }
  ok=ok&&!x->e.warnings&&!y->e.warnings;jpeg_cleanup(x);jpeg_cleanup(y);return ok;
 }
-int rc_jpeg_optimize(const uint8_t*b,size_t n,int automatic,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out,char*e,size_t en){
+int rc_jpeg_optimize(const uint8_t*b,size_t n,int profile,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out,char*e,size_t en){
  out->bytes=NULL;out->size=0;RCBuffer best={0},trial={0};
  if(!jpeg_encode(b,n,0,strip,cb,ctx,&best)){message(e,en,cancelled(cb,ctx)?"Cancelled.":"Could not decode the complete JPEG.");return 0;}
  if(!rc_jpeg_coefficients_equal(b,n,best.bytes,best.size)){rc_buffer_free(&best);message(e,en,"The JPEG candidate does not preserve the coefficients.");return 0;}
- if(automatic&&jpeg_auto_safe(b,n)&&!cancelled(cb,ctx)&&jpeg_encode(b,n,1,strip,cb,ctx,&trial)){
-  if(trial.size<n&&trial.size<best.size){int w=0,h=0,cw=0,ch=0;uint8_t*p=jpeg_rgba(b,n,&w,&h),*q=jpeg_rgba(trial.bytes,trial.size,&cw,&ch);
-   if(p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,NULL)){rc_buffer_free(&best);best=trial;trial.bytes=NULL;trial.size=0;}free(p);free(q);
-  }rc_buffer_free(&trial);
+ int attempts=rc_profile_attempts(profile);
+ if(attempts&&jpeg_auto_safe(b,n)){
+  for(int step=0;step<attempts&&!cancelled(cb,ctx);step++){
+   if(!jpeg_encode(b,n,(int)rc_profile_quality(profile,0,step),strip,cb,ctx,&trial))break;
+   if(trial.size<n&&trial.size<best.size){
+    int w=0,h=0,cw=0,ch=0;uint8_t*p=jpeg_rgba(b,n,&w,&h),*q=jpeg_rgba(trial.bytes,trial.size,&cw,&ch);
+    if(p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,rc_profile_min_ssim_db(profile),NULL)){
+     rc_buffer_free(&best);best=trial;trial.bytes=NULL;trial.size=0;
+    }free(p);free(q);
+   }rc_buffer_free(&trial);
+  }
  }
  if(cancelled(cb,ctx)||best.size>=n)rc_buffer_free(&best);*out=best;return 1;
 }
@@ -260,31 +288,34 @@ static int webp_container(const uint8_t*src,size_t sn,const uint8_t*enc,size_t e
 }
 typedef struct { RCShouldCancel callback;void*context; } WebPCancel;
 static int webp_progress(int percent,const WebPPicture*p){(void)percent;WebPCancel*c=p->user_data;return !cancelled(c->callback,c->context);}
-static int webp_encode(const uint8_t*rgba,int w,int h,int lossless,RCShouldCancel cb,void*ctx,RCBuffer*out){
- WebPConfig config;if(!WebPConfigPreset(&config,WEBP_PRESET_DEFAULT,lossless?75:90))return 0;config.lossless=lossless;config.method=4;config.exact=1;config.near_lossless=100;config.alpha_quality=100;config.thread_level=0;
+static int webp_encode(const uint8_t*rgba,int w,int h,int lossless,float quality,RCShouldCancel cb,void*ctx,RCBuffer*out){
+ WebPConfig config;if(!WebPConfigPreset(&config,WEBP_PRESET_DEFAULT,lossless?75:quality))return 0;config.lossless=lossless;config.method=4;config.exact=1;config.near_lossless=100;config.alpha_quality=100;config.thread_level=0;
  WebPPicture pic;if(!WebPPictureInit(&pic))return 0;pic.use_argb=1;pic.width=w;pic.height=h;
  WebPMemoryWriter writer;WebPMemoryWriterInit(&writer);pic.writer=WebPMemoryWrite;pic.custom_ptr=&writer;WebPCancel cancel={cb,ctx};pic.user_data=&cancel;pic.progress_hook=webp_progress;
  int ok=WebPValidateConfig(&config)&&WebPPictureImportRGBA(&pic,rgba,w*4)&&WebPEncode(&config,&pic);WebPPictureFree(&pic);
  if(ok){out->bytes=malloc(writer.size);if(out->bytes){memcpy(out->bytes,writer.mem,writer.size);out->size=writer.size;}else ok=0;}WebPMemoryWriterClear(&writer);return ok;
 }
 int rc_webp_pixels_equal(const uint8_t*a,size_t an,const uint8_t*b,size_t bn){int aw,ah,bw,bh;uint8_t*x=WebPDecodeRGBA(a,an,&aw,&ah),*y=WebPDecodeRGBA(b,bn,&bw,&bh);int ok=x&&y&&aw==bw&&ah==bh&&!memcmp(x,y,(size_t)aw*ah*4);WebPFree(x);WebPFree(y);return ok;}
-int rc_webp_optimize(const uint8_t*b,size_t n,int automatic,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out,char*e,size_t en){
+int rc_webp_optimize(const uint8_t*b,size_t n,int profile,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out,char*e,size_t en){
  out->bytes=NULL;out->size=0;RCImageInfo info={0};if(!rc_webp_inspect(b,n,&info,e,en))return 0;
  int w,h;uint8_t*p=WebPDecodeRGBA(b,n,&w,&h);if(!p){message(e,en,"Damaged or incomplete WebP.");return 0;}
  RCBuffer best={0},encoded={0},trial={0};
  if(strip && !webp_container(b,n,b,n,1,&best)){WebPFree(p);message(e,en,"Could not preserve WebP metadata.");return 0;}
- if((info.lossless||automatic)&&!webp_unknown(b,n)&&!cancelled(cb,ctx)&&webp_encode(p,w,h,info.lossless,cb,ctx,&encoded)){
-  if(webp_container(b,n,encoded.bytes,encoded.size,strip,&trial)){
+ // Lossless WebP stays lossless, including RGB hidden under transparent pixels.
+ int attempts=info.lossless?1:rc_profile_attempts(profile);
+ if(!webp_unknown(b,n))for(int step=0;step<attempts&&!cancelled(cb,ctx);step++){
+  if(!webp_encode(p,w,h,info.lossless,(float)rc_profile_quality(profile,1,step),cb,ctx,&encoded))break;
+  if(webp_container(b,n,encoded.bytes,encoded.size,strip,&trial)&&trial.size<n&&(!best.bytes||trial.size<best.size)){
    int cw,ch;uint8_t*q=WebPDecodeRGBA(trial.bytes,trial.size,&cw,&ch);int valid=q&&w==cw&&h==ch;
-   if(valid)valid=info.lossless?!memcmp(p,q,(size_t)w*h*4):similar_metrics(p,q,w,h,NULL);
-   if(valid&&trial.size<n&&(!best.bytes||trial.size<best.size)){rc_buffer_free(&best);best=trial;trial.bytes=NULL;trial.size=0;}WebPFree(q);
+   if(valid)valid=info.lossless?!memcmp(p,q,(size_t)w*h*4):similar_metrics(p,q,w,h,rc_profile_min_ssim_db(profile),NULL);
+   if(valid){rc_buffer_free(&best);best=trial;trial.bytes=NULL;trial.size=0;}WebPFree(q);
   }rc_buffer_free(&trial);rc_buffer_free(&encoded);
  }
  WebPFree(p);if(cancelled(cb,ctx)||best.size>=n)rc_buffer_free(&best);*out=best;return 1;
 }
 
-int rc_jpeg_ssim_rgb(const uint8_t*a,size_t an,const uint8_t*b,size_t bn,float scores[5]){int w,h,cw,ch;uint8_t*p=jpeg_rgba(a,an,&w,&h),*q=jpeg_rgba(b,bn,&cw,&ch);int ok=p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,scores);free(p);free(q);return ok;}
-int rc_webp_ssim_rgb(const uint8_t*a,size_t an,const uint8_t*b,size_t bn,float scores[5]){int w,h,cw,ch;uint8_t*p=WebPDecodeRGBA(a,an,&w,&h),*q=WebPDecodeRGBA(b,bn,&cw,&ch);int ok=p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,scores);WebPFree(p);WebPFree(q);return ok;}
+int rc_jpeg_ssim_rgb(const uint8_t*a,size_t an,const uint8_t*b,size_t bn,float scores[5]){int w,h,cw,ch;uint8_t*p=jpeg_rgba(a,an,&w,&h),*q=jpeg_rgba(b,bn,&cw,&ch);int ok=p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,SSIM_MIN_DB,scores);free(p);free(q);return ok;}
+int rc_webp_ssim_rgb(const uint8_t*a,size_t an,const uint8_t*b,size_t bn,float scores[5]){int w,h,cw,ch;uint8_t*p=WebPDecodeRGBA(a,an,&w,&h),*q=WebPDecodeRGBA(b,bn,&cw,&ch);int ok=p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,SSIM_MIN_DB,scores);WebPFree(p);WebPFree(q);return ok;}
 
 /* Compare decompressed ICC profiles without allocating either uncompressed profile. */
 int rc_zlib_equal(const uint8_t*a,size_t an,const uint8_t*b,size_t bn){

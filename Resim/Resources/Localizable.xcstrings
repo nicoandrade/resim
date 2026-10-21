@@ -305,6 +305,22 @@
         }
       }
     },
+    "Adapts compression to each image to reduce size while keeping visual changes small. Recommended.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adapts compression to each image to reduce size while keeping visual changes small. Recommended."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adapta la compresión a cada imagen para reducir el peso con cambios visuales mínimos. Recomendado."
+          }
+        }
+      }
+    },
     "Add": {
       "localizations": {
         "en": {
@@ -621,6 +637,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Limpiar lista"
+          }
+        }
+      }
+    },
+    "Compression profile": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compression profile"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfil de compresión"
+          }
+        }
+      }
+    },
+    "Conservative": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservative"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservador"
           }
         }
       }
@@ -1041,6 +1089,22 @@
         }
       }
     },
+    "Keeps the original format and dimensions. PNG, GIF and SVG always use lossless optimization.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keeps the original format and dimensions. PNG, GIF and SVG always use lossless optimization."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conserva el formato y las dimensiones originales. PNG, GIF y SVG siempre se optimizan sin pérdida."
+          }
+        }
+      }
+    },
     "Local image optimization for macOS.": {
       "localizations": {
         "en": {
@@ -1069,6 +1133,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sin pérdida"
+          }
+        }
+      }
+    },
+    "Maximum compression": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maximum compression"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Máxima compresión"
           }
         }
       }
@@ -1421,6 +1501,38 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conserva la imagen. Algunas imágenes no reducirán su tamaño."
+          }
+        }
+      }
+    },
+    "Prioritizes image fidelity with gentle compression.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritizes image fidelity with gentle compression."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioriza la fidelidad de la imagen con una compresión suave."
+          }
+        }
+      }
+    },
+    "Prioritizes smaller files. Some loss of detail may be visible.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioritizes smaller files. Some loss of detail may be visible."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prioriza archivos más livianos. Puede notarse cierta pérdida de detalle."
           }
         }
       }
@@ -2317,6 +2429,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Versión %@"
+          }
+        }
+      }
+    },
+    "Web": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web"
           }
         }
       }

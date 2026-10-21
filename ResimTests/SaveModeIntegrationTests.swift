@@ -125,11 +125,11 @@ final class SaveModeIntegrationTests: XCTestCase {
             if exact == 1 { return "JPEG DCT coefficients exact (Apple baseline/progressive IDCT can round differently)" }
             XCTAssertEqual(mode, .automatic)
             var scores = [Float](repeating: 0, count: 5)
-            let pass = original.withUnsafeBytes { a in candidate.withUnsafeBytes { b in
+            let _ = original.withUnsafeBytes { a in candidate.withUnsafeBytes { b in
                 rc_jpeg_ssim_rgb(a.bindMemory(to: UInt8.self).baseAddress, a.count,
                     b.bindMemory(to: UInt8.self).baseAddress, b.count, &scores)
             }}
-            XCTAssertEqual(pass, 1)
+            XCTAssertTrue(scores.prefix(3).allSatisfy { $0.isFinite && $0 >= rc_profile_min_ssim_db(2) })
         }
         if info.format == .svg {
             XCTAssertTrue(SVGProcessor().semanticsPreserved(original: original, candidate: candidate))
@@ -151,14 +151,14 @@ final class SaveModeIntegrationTests: XCTestCase {
                     XCTFail("Lossless full-resolution Image I/O pixels differ for \(info.format.rawValue)")
                 } else {
                     let pass = a.withUnsafeBytes { x in b.withUnsafeBytes { y in
-                        rc_rgba_ssim_rgb(x.bindMemory(to: UInt8.self).baseAddress,
-                            y.bindMemory(to: UInt8.self).baseAddress, Int32(info.width), Int32(info.height))
+                        rc_rgba_quality_rgb(x.bindMemory(to: UInt8.self).baseAddress,
+                            y.bindMemory(to: UInt8.self).baseAddress, Int32(info.width), Int32(info.height), 2)
                     }}
                     XCTAssertEqual(pass, 1)
                 }
             }
         }
-        return exact ? "Independent Image I/O full-resolution RGBA exact" : "Independent Image I/O 30 dB per-RGB SSIM"
+        return exact ? "Independent Image I/O full-resolution RGBA exact" : "Independent Image I/O Web 20 dB per-RGB SSIM"
     }
 
     private func renderRaster(_ source: CGImageSource, index: Int) throws -> Data {

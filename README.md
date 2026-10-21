@@ -12,14 +12,51 @@ Drop images from Finder into the window, or choose **Add Images…** (`⌘O`). P
 
 In **Resim → Settings…** (`⌘,`), choose:
 
-- **Automatic**: permits a conservative recompression for supported formats. The image may change slightly.
+- **Automatic**: choose **Conservative** for fidelity, **Web** (default) for adaptive compression with small visual changes, or **Maximum compression** for smaller files with more visible detail loss. Web and Maximum try several quality levels against the same source and keep the smallest validated result.
 - **Lossless**: preserves decoded samples or JPEG coefficients, plus supported presentation data. Some images will not become smaller.
 - Replace originals (default), save copies beside them, or save copies in an output folder. Copy modes preserve originals and use `name-optimized.ext`; name collisions receive a number. Previously saved copy preferences are retained when upgrading.
 - Optional removal of known personal metadata. This is selective and does not guarantee anonymity; unknown metadata and information visible in pixels may remain. HEIC and SVG require this option to be disabled.
 
+Profiles preserve format and dimensions. PNG, GIF, SVG and lossless WebP keep their lossless paths. Profile thresholds are an initial calibration, not a guarantee of invisible changes. See [visual comparisons](docs/QA.md#compression-profile-comparisons) to review the tradeoffs on your images. Existing saved Lossless and file-saving choices are preserved; preferences without a profile use Web.
+
 The sidebar groups optimization and output options under **General**, metadata controls under **Privacy**, and version information and third-party licenses under **About**.
 
 Settings apply to newly added images. Press `Esc` to cancel active and queued jobs; completed changes remain. The context menu can reveal files in Finder or retry errors. Closing or quitting during processing asks whether to continue or cancel and close. Clearing finished rows does not delete files.
+
+## Compression profile settings
+
+Automatic mode uses the following encoder quality candidates. **Web is the default**.
+Each candidate is encoded from the same original; Resim keeps the smallest result
+that passes the selected quality floor and all preservation checks. A smaller
+quality number generally permits more loss, but these numbers are encoder-specific,
+not percentages of retained visual quality or directly comparable across formats.
+
+| Format / validation | Conservative | Web (default) | Maximum compression |
+| --- | --- | --- | --- |
+| JPEG — MozJPEG quality | 92 | 98, 95, 92, 88, 84, 80, 76 | All Web levels + 70, 64, 58 |
+| Lossy WebP — libwebp quality | 90 | 98, 94, 90, 85, 80, 75, 70 | All Web levels + 60, 50, 40 |
+| AVIF — libavif/AOM quality | 95 | 95, 90, 85, 80, 75, 65, 55 | All Web levels + 45, 35, 25 |
+| HEIC — Image I/O quality | 0.85 | 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65 | All Web levels + 0.55, 0.45, 0.35 |
+| PNG — Oxipng | Lossless, preset 2, `--nx` | Same | Same |
+| Lossless WebP — libwebp | Lossless, method 4, `exact=1`, `near_lossless=100` | Same | Same |
+| GIF — Gifsicle | Lossless, optimization level 2; frames and timing preserved | Same | Same |
+| SVG — SVGO | Attribute sorting and compact XML; no geometry simplification or numeric rounding | Same | Same |
+| Minimum SSIM in **each RGB channel**, for lossy candidates | 30 dB (≈ 0.999) | 20 dB (≈ 0.990) | 16 dB (≈ 0.975) |
+| Maximum lossy attempts per image | 1 | 7 | 10 |
+
+SSIM uses libwebp's logarithmic dB representation, **not PSNR**. These thresholds
+are Resim's quality policy, not universal web standards or a guarantee that every
+visual difference is imperceptible. More attempts can take longer; no recompression
+is published if it fails quality, preservation, or size checks. Some images
+therefore produce identical results across profiles.
+
+JPEG preserves its original chroma subsampling and uses progressive coding.
+WebP uses method 4 and alpha quality 100; lossless WebP additionally uses quality
+75 as its encoding-effort parameter. AVIF uses AOM speed 6 and lossless alpha.
+PNG, GIF, SVG and lossless WebP remain lossless in every profile. Alpha is checked
+exactly, and all formats retain their dimensions and format. Unknown metadata
+can disable lossy recompression. The separate **Lossless** mode overrides the
+selected profile. See [codec preservation rules](docs/CODECS.md) for details.
 
 ## Supported images
 

@@ -16,7 +16,7 @@ final class AVIFIntegrationTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: work) }
         let processor = NativeImageProcessor()
         let output = try processor.optimize(source: source, workDirectory: work,
-                                            settings: .init(mode: mode, stripPersonalMetadata: strip), cancellation: CancellationToken())
+                                            settings: .init(mode: mode, stripPersonalMetadata: strip, profile: .conservative), cancellation: CancellationToken())
         XCTAssertEqual(try Data(contentsOf: source), original, "AVIF original must stay byte-identical")
         guard let output else { return (original, nil) }
         let optimized = try Data(contentsOf: output)

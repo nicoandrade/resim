@@ -101,3 +101,52 @@ Follow [DISTRIBUTION.md](DISTRIBUTION.md) for signing, notarization, package int
 Run on Apple Silicon and Intel hardware, including macOS 14. A Universal 2 build confirms that both slices exist; a host test run confirms only the environment where it ran. Keep unexecuted environments explicitly pending in release records.
 
 Review logs, JSON, screenshots, metadata, and generated manifests before publishing. Remove personal paths, signing identities, credentials, machine identifiers, and unrelated user content. Local `.build/`, `dist/`, and historical QA reports should stay outside source control.
+
+
+## Compression profile comparisons
+
+Build codecs first, then generate an optimized, local comparison:
+
+```sh
+python3 scripts/compare-profiles.py --output .build/profile-comparison
+```
+
+Open `.build/profile-comparison/index.html`. It includes a before/after divider,
+profile switching, fit/100%/200% views, original/result downloads, encoded byte
+counts, savings and per-image timings. PNG previews are independently decoded by
+Image I/O at full resolution with orientation applied. Preview sizes are never
+reported as compressed file sizes. 100% means one image pixel per CSS pixel;
+Retina display scaling still applies. The viewer needs no network connection.
+
+The default inputs combine the redistributable IJG photograph at its native
+resolution, existing WebP/AVIF fixtures, and original 1200×800 artwork with small
+text, fine lines and a gradient encoded as JPEG, PNG, HEIC, WebP and AVIF.
+The tool also makes WebP/AVIF versions of the IJG photograph using the existing
+QA encoder; these are separately encoded sources, not cross-format conversions
+performed by the production optimizer. These are calibration
+examples, not a representative photographic benchmark. IJG provenance and license
+are in `ResimTests/Fixtures/README.md` and `IJG-README.txt`. The demo removes
+Image I/O-generated Photoshop APP13 metadata from its default JPEG copies
+without modifying coefficients, to exercise recompression. Custom `--inputs`
+files are never normalized; unknown markers still disable recompression.
+
+To evaluate real local images without modifying them:
+
+```sh
+python3 scripts/compare-profiles.py --inputs /path/to/images --output .build/profile-comparison-photos
+```
+
+Use a new output directory each time. Supported inputs are static JPG, PNG, WebP,
+AVIF and HEIC; app safety limits and unsupported-input exclusions still apply.
+The tool saves immutable source copies, all three results, full-resolution previews
+and `results.json` (hashes, sizes, times and JPEG/WebP SSIM). No files are uploaded.
+Review results at their intended display size, then inspect text, faces, foliage,
+edges, gradients and transparency at 100%/200%. Compare each profile against the
+same original, never a previously compressed result. Review at least several real
+photographs and screenshots before declaring the Web threshold visually calibrated.
+
+`CompressionProfileTests` covers preference migration/round trips, the Web default,
+quality and alpha rejection, decreasing sizes across stronger profiles on a fixed
+corpus, exact lossless overrides, and source preservation. Historical 30 dB
+regressions explicitly exercise Conservative. Queue tests check captured profiles
+and persistence. Release QA and replacement-mode checks use the new Web default.
