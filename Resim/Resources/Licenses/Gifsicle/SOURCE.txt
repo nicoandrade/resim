@@ -1,0 +1,17 @@
+Resim includes unmodified Gifsicle/gifdiff 1.98 standalone executables.
+Copyright (C) 1997-2025 Eddie Kohler. License: GPL version 2 only; see COPYING.
+
+Complete corresponding upstream source: gifsicle-1.98.tar.gz (included).
+Official origin: https://www.lcdf.org/gifsicle/gifsicle-1.98.tar.gz
+SHA-256: e9d4cc0816db95c64d32e79f778836db0f1f7eb15868490bd330104e5146b66e
+No source patches were applied. The included build-gif.sh is the exact build recipe.
+
+To reproduce on a Mac with Xcode Command Line Tools and make:
+1. Create a working directory with scripts/ and vendor/cache/ subdirectories.
+2. Copy build-gif.sh into scripts/ and gifsicle-1.98.tar.gz into vendor/cache/.
+3. Run: bash scripts/build-gif.sh
+
+The script verifies the archive, extracts it, configures both architectures,
+builds without the X11 viewer or threads, combines arm64/x86_64 and signs ad hoc.
+The macOS deployment target is 14.0. Output: Resim/Resources/Codecs/.
+Developer ID signing of distribution copies does not change the upstream source.

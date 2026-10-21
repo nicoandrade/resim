@@ -1,0 +1,989 @@
+// !$*UTF8*$!
+{
+	"archiveVersion" = "1";
+	"classes" = {
+	};
+	"objectVersion" = "56";
+	"objects" = {
+		"9BA0E9E31303BE4F9D1FED5A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/App/LaunchDiagnostics.swift";
+			"sourceTree" = "<group>";
+		};
+		"AB8A7E3B80F0298E44354EAD" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "9BA0E9E31303BE4F9D1FED5A";
+		};
+		"E293BA46C113A0BA7CFC1EF0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/App/ResimApp.swift";
+			"sourceTree" = "<group>";
+		};
+		"6D9110AA7F934974AD9D8492" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "E293BA46C113A0BA7CFC1EF0";
+		};
+		"6A7607F5993D8B981FE30CF4" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Models/ImageJob.swift";
+			"sourceTree" = "<group>";
+		};
+		"4DC789C87CC213BBB31D4F75" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "6A7607F5993D8B981FE30CF4";
+		};
+		"C5C8B0199EB3FCC644F4E111" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Models/ProcessingContract.swift";
+			"sourceTree" = "<group>";
+		};
+		"5986EDFA372C0A230695074A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "C5C8B0199EB3FCC644F4E111";
+		};
+		"5FB802A695417F6D77778D88" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.c.h";
+			"path" = "Resim/Native/Resim-Bridging-Header.h";
+			"sourceTree" = "<group>";
+		};
+		"7BE0CAB64D02889CBEF31AEC" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.c.c";
+			"path" = "Resim/Native/ResimAVIF.c";
+			"sourceTree" = "<group>";
+		};
+		"A08FB93AF03E27E0BE26129B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "7BE0CAB64D02889CBEF31AEC";
+		};
+		"B037A4EF930CAF029BD64212" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.c.c";
+			"path" = "Resim/Native/ResimCodecs.c";
+			"sourceTree" = "<group>";
+		};
+		"7CD84A7F0B82D365B555441F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B037A4EF930CAF029BD64212";
+		};
+		"8E7DA0651944162EF5003DB8" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.c.h";
+			"path" = "Resim/Native/ResimCodecs.h";
+			"sourceTree" = "<group>";
+		};
+		"0593A7EAF1915A03B3F80910" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Optimizers/GIFProcessor.swift";
+			"sourceTree" = "<group>";
+		};
+		"D7DE993EAD9D0D49B1418808" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "0593A7EAF1915A03B3F80910";
+		};
+		"46FA8898476A07D5937A100B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Optimizers/HEICProcessor.swift";
+			"sourceTree" = "<group>";
+		};
+		"15DC7E450DBDCA9B41462A6E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "46FA8898476A07D5937A100B";
+		};
+		"DA562116C1FC0EE751086709" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Optimizers/NativeImageProcessor.swift";
+			"sourceTree" = "<group>";
+		};
+		"4638003133813BDD3655A484" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "DA562116C1FC0EE751086709";
+		};
+		"B29F0A2955EC1DB109E74E3E" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Optimizers/SVGProcessor.swift";
+			"sourceTree" = "<group>";
+		};
+		"3A06E0FE895F0CAB7EA52C41" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B29F0A2955EC1DB109E74E3E";
+		};
+		"BED94C8AAD2851741E5751CA" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Services/AppModel.swift";
+			"sourceTree" = "<group>";
+		};
+		"CD869CE6070877ADD0C5F71D" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "BED94C8AAD2851741E5751CA";
+		};
+		"58E1DD9E1D019C4322C6B0B2" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Services/BlockingCodecPool.swift";
+			"sourceTree" = "<group>";
+		};
+		"BB751110A62E77E5408B1259" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "58E1DD9E1D019C4322C6B0B2";
+		};
+		"4FAD3F54056B8B70C44C5E70" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Services/FileURLDropReader.swift";
+			"sourceTree" = "<group>";
+		};
+		"B85AD9D6C7D24AA70D9BE855" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "4FAD3F54056B8B70C44C5E70";
+		};
+		"386E60F2136C2A315667E984" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Services/QueueCoordinator.swift";
+			"sourceTree" = "<group>";
+		};
+		"9A56D230A8349EAEA2086F41" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "386E60F2136C2A315667E984";
+		};
+		"874050B21AAD7C4F9C291EEE" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Services/SafeFiles.swift";
+			"sourceTree" = "<group>";
+		};
+		"A58E2615B25C8DD562C8FAD9" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "874050B21AAD7C4F9C291EEE";
+		};
+		"FD7A8272B8C2328E980D0CD3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Views/JobStatusIcon.swift";
+			"sourceTree" = "<group>";
+		};
+		"C6CE561B7DD143F9E1D7FF6F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "FD7A8272B8C2328E980D0CD3";
+		};
+		"B197F0DC944C03959FD42343" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Views/MainView.swift";
+			"sourceTree" = "<group>";
+		};
+		"4E406531BAAF335EB79EBAD0" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B197F0DC944C03959FD42343";
+		};
+		"EBFE6EA5FF69AAF4D9C35FF9" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "Resim/Views/SettingsView.swift";
+			"sourceTree" = "<group>";
+		};
+		"27EFC5F51E41EF718A25FCA7" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "EBFE6EA5FF69AAF4D9C35FF9";
+		};
+		"07ECE9740F2EC30D61E8E6D0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder.assetcatalog";
+			"path" = "Resim/Resources/Assets.xcassets";
+			"sourceTree" = "<group>";
+		};
+		"45DFC03782880B25DAD07D25" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "07ECE9740F2EC30D61E8E6D0";
+		};
+		"45ACAF9A78C1DB941709F0B1" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.json.xcstrings";
+			"path" = "Resim/Resources/Localizable.xcstrings";
+			"sourceTree" = "<group>";
+		};
+		"CA226691E91C8B334B8AC3C8" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "45ACAF9A78C1DB941709F0B1";
+		};
+		"09AA39B493FA0A362F1DF644" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "text.json.xcstrings";
+			"path" = "Resim/Resources/InfoPlist.xcstrings";
+			"sourceTree" = "<group>";
+		};
+		"DE0808CDAD32CFA1639F9B32" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "09AA39B493FA0A362F1DF644";
+		};
+		"B0C35B3FA66BABA7D60C3519" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder";
+			"path" = "Resim/Resources/Codecs";
+			"sourceTree" = "<group>";
+		};
+		"A078AD9AB3298A9C11A1F25B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B0C35B3FA66BABA7D60C3519";
+		};
+		"991CAA622D19A9FAC0D97928" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder";
+			"path" = "Resim/Resources/Licenses";
+			"sourceTree" = "<group>";
+		};
+		"142D66D80D9109227968E682" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "991CAA622D19A9FAC0D97928";
+		};
+		"7CFAA4CAF8A9AFAAD36728DD" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/AVIFIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"471C1C7DBA291082765F7E3A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "7CFAA4CAF8A9AFAAD36728DD";
+		};
+		"42B98EC108B9CA5293727065" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/AppModelSummaryTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"94BFA917C6F94A3F9399F035" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "42B98EC108B9CA5293727065";
+		};
+		"9DC4438284BF9EFF5CD84FC0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/BatchIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"AA0C13C2EAB2B5688CC3872F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "9DC4438284BF9EFF5CD84FC0";
+		};
+		"82934997CF7F0F748448423F" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/BenchmarkTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"C4D996624059E5846B33A071" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "82934997CF7F0F748448423F";
+		};
+		"3274C9B909F90B52B579A0D3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/BlockingCodecPoolTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"133DEAEB313E65240187A5FD" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "3274C9B909F90B52B579A0D3";
+		};
+		"224FAC91D8218FF29E3B6E6C" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/CodecIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"B398B5B3C020CDD1BC38FA42" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "224FAC91D8218FF29E3B6E6C";
+		};
+		"0A007F1478F6EEEE6B906AFC" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/CodecSafetyTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"1B84DC28E6898D698EB1360F" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "0A007F1478F6EEEE6B906AFC";
+		};
+		"DE22096C4C0058E2791797B3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/FileURLDropTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"817A2D7068A18D612865F31C" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "DE22096C4C0058E2791797B3";
+		};
+		"4996E91469A26D00AB30C2AB" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/GIFCancellationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"3846F9966FBE7850BC79F0F3" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "4996E91469A26D00AB30C2AB";
+		};
+		"DEDA525A013FEB92B9033DA0" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/GIFIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"0F9D88D859F6EDCB9A1AA30B" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "DEDA525A013FEB92B9033DA0";
+		};
+		"ADE064A878ABC50EDEDBEEFD" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/GIFQueueTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"CC2F742B62078B79FA230FD6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "ADE064A878ABC50EDEDBEEFD";
+		};
+		"AB88CFDE278E5F5B0D81C311" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/HEICIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"D30F18CE84705DD2B1567661" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "AB88CFDE278E5F5B0D81C311";
+		};
+		"F3C46F76D404FCBC6960AC3F" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/LocalizationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"DB1C7BBEE0167EB252C5B167" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F3C46F76D404FCBC6960AC3F";
+		};
+		"D5459D0535F96BDA968BA24A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/PipelineTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"68AA48A47DFA2604F1F0529A" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D5459D0535F96BDA968BA24A";
+		};
+		"BF8E067B7A2CCD32CB323CAC" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/QueueEventOrderingTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"9417E3FE8B4705ECC018BF61" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "BF8E067B7A2CCD32CB323CAC";
+		};
+		"61B8EDBFC9A26901539CA47C" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/QueueFairnessTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"68EE381A501BB6758403D171" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "61B8EDBFC9A26901539CA47C";
+		};
+		"1F585B8D3EA129EDED161078" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/ReleaseQATests.swift";
+			"sourceTree" = "<group>";
+		};
+		"8BF802ACD9662083146C96EF" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "1F585B8D3EA129EDED161078";
+		};
+		"D19A31BE4358701BBED9A7D3" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/SVGIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"7DF9AA1C9E81056A374E1F10" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "D19A31BE4358701BBED9A7D3";
+		};
+		"08D72E08D310BC3219420507" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/SaveModeIntegrationTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"9122AE95268358D27B6E88F6" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "08D72E08D310BC3219420507";
+		};
+		"EB4AB5CA7DC7D5160E79CE0B" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "sourcecode.swift";
+			"path" = "ResimTests/WebPMetadataTests.swift";
+			"sourceTree" = "<group>";
+		};
+		"40CB9299171C0BC4B688C6E0" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "EB4AB5CA7DC7D5160E79CE0B";
+		};
+		"5B4818F81C7256E686BA2E05" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "folder";
+			"path" = "ResimTests/Fixtures";
+			"sourceTree" = "<group>";
+		};
+		"FF69530A024A160084203937" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "5B4818F81C7256E686BA2E05";
+		};
+		"4B9A556243391CA59A94D90A" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libjpeg.a";
+			"sourceTree" = "<group>";
+		};
+		"74915F0DF94C3CF6347E92CE" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "4B9A556243391CA59A94D90A";
+		};
+		"6A1189D998B807501B4558A8" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libwebpmux.a";
+			"sourceTree" = "<group>";
+		};
+		"98AD5C6790EC4DCC867684BE" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "6A1189D998B807501B4558A8";
+		};
+		"6A471ACE5442D085C439E9FD" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libwebpdemux.a";
+			"sourceTree" = "<group>";
+		};
+		"9DA6F5D4ED062606B5D61979" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "6A471ACE5442D085C439E9FD";
+		};
+		"48C52F881465C9A1CAAA5BCB" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libwebp.a";
+			"sourceTree" = "<group>";
+		};
+		"5588F19C48BC81509D85551E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "48C52F881465C9A1CAAA5BCB";
+		};
+		"BAEBFA3306C04054DA0D4AE7" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libsharpyuv.a";
+			"sourceTree" = "<group>";
+		};
+		"F5030EDAD454B0000EB2C4F4" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "BAEBFA3306C04054DA0D4AE7";
+		};
+		"B5750F9A6C3421D41B99411D" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libavif.a";
+			"sourceTree" = "<group>";
+		};
+		"89614D40B841D3D3DACC01A8" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "B5750F9A6C3421D41B99411D";
+		};
+		"F6A3B278E18EB4F0243D9948" = {
+			"isa" = "PBXFileReference";
+			"lastKnownFileType" = "archive.ar";
+			"path" = "vendor/build/lib/libaom.a";
+			"sourceTree" = "<group>";
+		};
+		"D563EC444D46E0B0F178DB3E" = {
+			"isa" = "PBXBuildFile";
+			"fileRef" = "F6A3B278E18EB4F0243D9948";
+		};
+		"AE0042EC290704DA7E641B97" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.application";
+			"path" = "Resim.app";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"E7F08BCC397888750F5CB9BD" = {
+			"isa" = "PBXFileReference";
+			"explicitFileType" = "wrapper.cfbundle";
+			"path" = "ResimTests.xctest";
+			"sourceTree" = "BUILT_PRODUCTS_DIR";
+		};
+		"E17E80AD8E2103CF3FC3FD96" = {
+			"isa" = "PBXGroup";
+			"name" = "Resim";
+			"children" = (
+				"9BA0E9E31303BE4F9D1FED5A",
+				"E293BA46C113A0BA7CFC1EF0",
+				"6A7607F5993D8B981FE30CF4",
+				"C5C8B0199EB3FCC644F4E111",
+				"5FB802A695417F6D77778D88",
+				"7BE0CAB64D02889CBEF31AEC",
+				"B037A4EF930CAF029BD64212",
+				"8E7DA0651944162EF5003DB8",
+				"0593A7EAF1915A03B3F80910",
+				"46FA8898476A07D5937A100B",
+				"DA562116C1FC0EE751086709",
+				"B29F0A2955EC1DB109E74E3E",
+				"BED94C8AAD2851741E5751CA",
+				"58E1DD9E1D019C4322C6B0B2",
+				"4FAD3F54056B8B70C44C5E70",
+				"386E60F2136C2A315667E984",
+				"874050B21AAD7C4F9C291EEE",
+				"FD7A8272B8C2328E980D0CD3",
+				"B197F0DC944C03959FD42343",
+				"EBFE6EA5FF69AAF4D9C35FF9",
+				"07ECE9740F2EC30D61E8E6D0",
+				"45ACAF9A78C1DB941709F0B1",
+				"09AA39B493FA0A362F1DF644",
+				"B0C35B3FA66BABA7D60C3519",
+				"991CAA622D19A9FAC0D97928",
+			);
+			"sourceTree" = "<group>";
+		};
+		"781CAA6738A604344AE86EE3" = {
+			"isa" = "PBXGroup";
+			"name" = "ResimTests";
+			"children" = (
+				"7CFAA4CAF8A9AFAAD36728DD",
+				"42B98EC108B9CA5293727065",
+				"9DC4438284BF9EFF5CD84FC0",
+				"82934997CF7F0F748448423F",
+				"3274C9B909F90B52B579A0D3",
+				"224FAC91D8218FF29E3B6E6C",
+				"0A007F1478F6EEEE6B906AFC",
+				"DE22096C4C0058E2791797B3",
+				"4996E91469A26D00AB30C2AB",
+				"DEDA525A013FEB92B9033DA0",
+				"ADE064A878ABC50EDEDBEEFD",
+				"AB88CFDE278E5F5B0D81C311",
+				"F3C46F76D404FCBC6960AC3F",
+				"D5459D0535F96BDA968BA24A",
+				"BF8E067B7A2CCD32CB323CAC",
+				"61B8EDBFC9A26901539CA47C",
+				"1F585B8D3EA129EDED161078",
+				"D19A31BE4358701BBED9A7D3",
+				"08D72E08D310BC3219420507",
+				"EB4AB5CA7DC7D5160E79CE0B",
+				"5B4818F81C7256E686BA2E05",
+			);
+			"sourceTree" = "<group>";
+		};
+		"ADB3F6339B4D7FC1C3CD32AD" = {
+			"isa" = "PBXGroup";
+			"name" = "Static codecs";
+			"children" = (
+				"4B9A556243391CA59A94D90A",
+				"6A1189D998B807501B4558A8",
+				"6A471ACE5442D085C439E9FD",
+				"48C52F881465C9A1CAAA5BCB",
+				"BAEBFA3306C04054DA0D4AE7",
+				"B5750F9A6C3421D41B99411D",
+				"F6A3B278E18EB4F0243D9948",
+			);
+			"sourceTree" = "<group>";
+		};
+		"0A3E27B8CA818264D75C8D81" = {
+			"isa" = "PBXGroup";
+			"name" = "Products";
+			"children" = (
+				"AE0042EC290704DA7E641B97",
+				"E7F08BCC397888750F5CB9BD",
+			);
+			"sourceTree" = "<group>";
+		};
+		"0D6E4079E36703EBD37C0072" = {
+			"isa" = "PBXGroup";
+			"children" = (
+				"E17E80AD8E2103CF3FC3FD96",
+				"781CAA6738A604344AE86EE3",
+				"ADB3F6339B4D7FC1C3CD32AD",
+				"0A3E27B8CA818264D75C8D81",
+			);
+			"sourceTree" = "<group>";
+		};
+		"6BAB02B549A96CC50D0CA977" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"AB8A7E3B80F0298E44354EAD",
+				"6D9110AA7F934974AD9D8492",
+				"4DC789C87CC213BBB31D4F75",
+				"5986EDFA372C0A230695074A",
+				"A08FB93AF03E27E0BE26129B",
+				"7CD84A7F0B82D365B555441F",
+				"D7DE993EAD9D0D49B1418808",
+				"15DC7E450DBDCA9B41462A6E",
+				"4638003133813BDD3655A484",
+				"3A06E0FE895F0CAB7EA52C41",
+				"CD869CE6070877ADD0C5F71D",
+				"BB751110A62E77E5408B1259",
+				"B85AD9D6C7D24AA70D9BE855",
+				"9A56D230A8349EAEA2086F41",
+				"A58E2615B25C8DD562C8FAD9",
+				"C6CE561B7DD143F9E1D7FF6F",
+				"4E406531BAAF335EB79EBAD0",
+				"27EFC5F51E41EF718A25FCA7",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"DAB7151652C25D9B83C5FD83" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"45DFC03782880B25DAD07D25",
+				"CA226691E91C8B334B8AC3C8",
+				"DE0808CDAD32CFA1639F9B32",
+				"A078AD9AB3298A9C11A1F25B",
+				"142D66D80D9109227968E682",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"E2AA269EB967A8853A258BFA" = {
+			"isa" = "PBXFrameworksBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"74915F0DF94C3CF6347E92CE",
+				"98AD5C6790EC4DCC867684BE",
+				"9DA6F5D4ED062606B5D61979",
+				"5588F19C48BC81509D85551E",
+				"F5030EDAD454B0000EB2C4F4",
+				"89614D40B841D3D3DACC01A8",
+				"D563EC444D46E0B0F178DB3E",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"798B65A4B63A4D08FDD4C755" = {
+			"isa" = "PBXSourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"471C1C7DBA291082765F7E3A",
+				"94BFA917C6F94A3F9399F035",
+				"AA0C13C2EAB2B5688CC3872F",
+				"C4D996624059E5846B33A071",
+				"133DEAEB313E65240187A5FD",
+				"B398B5B3C020CDD1BC38FA42",
+				"1B84DC28E6898D698EB1360F",
+				"817A2D7068A18D612865F31C",
+				"3846F9966FBE7850BC79F0F3",
+				"0F9D88D859F6EDCB9A1AA30B",
+				"CC2F742B62078B79FA230FD6",
+				"D30F18CE84705DD2B1567661",
+				"DB1C7BBEE0167EB252C5B167",
+				"68AA48A47DFA2604F1F0529A",
+				"9417E3FE8B4705ECC018BF61",
+				"68EE381A501BB6758403D171",
+				"8BF802ACD9662083146C96EF",
+				"7DF9AA1C9E81056A374E1F10",
+				"9122AE95268358D27B6E88F6",
+				"40CB9299171C0BC4B688C6E0",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"14F0309E5479D955E2A2D11E" = {
+			"isa" = "PBXResourcesBuildPhase";
+			"buildActionMask" = "2147483647";
+			"files" = (
+				"FF69530A024A160084203937",
+			);
+			"runOnlyForDeploymentPostprocessing" = "0";
+		};
+		"B00CCDD09424E369308D67FA" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.resim.app";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "Resim/Info.plist";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"ENABLE_HARDENED_RUNTIME" = "YES";
+				"ENABLE_APP_SANDBOX" = "NO";
+				"CODE_SIGN_STYLE" = "Manual";
+				"CODE_SIGN_IDENTITY" = "-";
+				"SWIFT_OBJC_BRIDGING_HEADER" = "Resim/Native/Resim-Bridging-Header.h";
+				"HEADER_SEARCH_PATHS" = (
+					"$(SRCROOT)/vendor/build/include",
+					"$(SRCROOT)/Resim/Native",
+				);
+				"LIBRARY_SEARCH_PATHS" = (
+					"$(SRCROOT)/vendor/build/lib",
+				);
+				"OTHER_LDFLAGS" = (
+					"$(inherited)",
+					"-lc++",
+					"-lz",
+				);
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				"ENABLE_TESTABILITY" = "YES";
+				"COMBINE_HIDPI_IMAGES" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"GCC_OPTIMIZATION_LEVEL" = "0";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+			};
+		};
+		"1B104479E55E37CF8A63CBDF" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.resim.app";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"GENERATE_INFOPLIST_FILE" = "NO";
+				"INFOPLIST_FILE" = "Resim/Info.plist";
+				"ASSETCATALOG_COMPILER_APPICON_NAME" = "AppIcon";
+				"ENABLE_HARDENED_RUNTIME" = "YES";
+				"ENABLE_APP_SANDBOX" = "NO";
+				"CODE_SIGN_STYLE" = "Manual";
+				"CODE_SIGN_IDENTITY" = "-";
+				"SWIFT_OBJC_BRIDGING_HEADER" = "Resim/Native/Resim-Bridging-Header.h";
+				"HEADER_SEARCH_PATHS" = (
+					"$(SRCROOT)/vendor/build/include",
+					"$(SRCROOT)/Resim/Native",
+				);
+				"LIBRARY_SEARCH_PATHS" = (
+					"$(SRCROOT)/vendor/build/lib",
+				);
+				"OTHER_LDFLAGS" = (
+					"$(inherited)",
+					"-lc++",
+					"-lz",
+				);
+				"LD_RUNPATH_SEARCH_PATHS" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				"ENABLE_TESTABILITY" = "YES";
+				"COMBINE_HIDPI_IMAGES" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"GCC_OPTIMIZATION_LEVEL" = "s";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		"06CB67C35A91E16DBD17B949" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"B00CCDD09424E369308D67FA",
+				"1B104479E55E37CF8A63CBDF",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"E7A3CDEFEB9193C848ACCD43" = {
+			"isa" = "PBXNativeTarget";
+			"name" = "Resim";
+			"buildConfigurationList" = "06CB67C35A91E16DBD17B949";
+			"buildPhases" = (
+				"6BAB02B549A96CC50D0CA977",
+				"E2AA269EB967A8853A258BFA",
+				"DAB7151652C25D9B83C5FD83",
+			);
+			"buildRules" = (
+			);
+			"dependencies" = (
+			);
+			"productName" = "Resim";
+			"productReference" = "AE0042EC290704DA7E641B97";
+			"productType" = "com.apple.product-type.application";
+		};
+		"1241936D4DD3AAD68FE7BFBD" = {
+			"isa" = "PBXContainerItemProxy";
+			"containerPortal" = "244210E48437B6556980A702";
+			"proxyType" = "1";
+			"remoteGlobalIDString" = "E7A3CDEFEB9193C848ACCD43";
+			"remoteInfo" = "Resim";
+		};
+		"F26350DAFE3F19AABFD69AC4" = {
+			"isa" = "PBXTargetDependency";
+			"target" = "E7A3CDEFEB9193C848ACCD43";
+			"targetProxy" = "1241936D4DD3AAD68FE7BFBD";
+		};
+		"DD3F495F7D6A5AA1C1769021" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.resim.tests";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"CODE_SIGN_IDENTITY" = "-";
+				"TEST_HOST" = "$(BUILT_PRODUCTS_DIR)/Resim.app/Contents/MacOS/Resim";
+				"BUNDLE_LOADER" = "$(TEST_HOST)";
+				"HEADER_SEARCH_PATHS" = (
+					"$(SRCROOT)/vendor/build/include",
+					"$(SRCROOT)/Resim/Native",
+				);
+				"SWIFT_OBJC_BRIDGING_HEADER" = "Resim/Native/Resim-Bridging-Header.h";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"GCC_OPTIMIZATION_LEVEL" = "0";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+			};
+		};
+		"E670BC2FFE794172EBC92AE3" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"PRODUCT_BUNDLE_IDENTIFIER" = "com.resim.tests";
+				"PRODUCT_NAME" = "$(TARGET_NAME)";
+				"GENERATE_INFOPLIST_FILE" = "YES";
+				"CODE_SIGN_IDENTITY" = "-";
+				"TEST_HOST" = "$(BUILT_PRODUCTS_DIR)/Resim.app/Contents/MacOS/Resim";
+				"BUNDLE_LOADER" = "$(TEST_HOST)";
+				"HEADER_SEARCH_PATHS" = (
+					"$(SRCROOT)/vendor/build/include",
+					"$(SRCROOT)/Resim/Native",
+				);
+				"SWIFT_OBJC_BRIDGING_HEADER" = "Resim/Native/Resim-Bridging-Header.h";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"GCC_OPTIMIZATION_LEVEL" = "s";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		"5FA394EFD07597E96CACD8E1" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"DD3F495F7D6A5AA1C1769021",
+				"E670BC2FFE794172EBC92AE3",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"E5B4A42C1A9B11F842B19C64" = {
+			"isa" = "PBXNativeTarget";
+			"name" = "ResimTests";
+			"buildConfigurationList" = "5FA394EFD07597E96CACD8E1";
+			"buildPhases" = (
+				"798B65A4B63A4D08FDD4C755",
+				"14F0309E5479D955E2A2D11E",
+			);
+			"buildRules" = (
+			);
+			"dependencies" = (
+				"F26350DAFE3F19AABFD69AC4",
+			);
+			"productName" = "ResimTests";
+			"productReference" = "E7F08BCC397888750F5CB9BD";
+			"productType" = "com.apple.product-type.bundle.unit-test";
+		};
+		"73EBF6644258C120893E685D" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Debug";
+			"buildSettings" = {
+				"MACOSX_DEPLOYMENT_TARGET" = "14.0";
+				"SDKROOT" = "macosx";
+				"SWIFT_VERSION" = "6.0";
+				"SWIFT_STRICT_CONCURRENCY" = "complete";
+				"SWIFT_EMIT_LOC_STRINGS" = "YES";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"CLANG_ENABLE_OBJC_ARC" = "YES";
+				"GCC_C_LANGUAGE_STANDARD" = "c11";
+				"ARCHS" = (
+					"arm64",
+					"x86_64",
+				);
+				"ONLY_ACTIVE_ARCH" = "NO";
+				"CURRENT_PROJECT_VERSION" = "9";
+				"MARKETING_VERSION" = "0.1.0";
+				"GCC_WARN_ABOUT_RETURN_TYPE" = "YES_ERROR";
+				"CLANG_WARN_DOCUMENTATION_COMMENTS" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-Onone";
+				"GCC_OPTIMIZATION_LEVEL" = "0";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS" = "DEBUG $(inherited)";
+			};
+		};
+		"0B0C687DF8B6B8DC790B519C" = {
+			"isa" = "XCBuildConfiguration";
+			"name" = "Release";
+			"buildSettings" = {
+				"MACOSX_DEPLOYMENT_TARGET" = "14.0";
+				"SDKROOT" = "macosx";
+				"SWIFT_VERSION" = "6.0";
+				"SWIFT_STRICT_CONCURRENCY" = "complete";
+				"SWIFT_EMIT_LOC_STRINGS" = "YES";
+				"CLANG_ENABLE_MODULES" = "YES";
+				"CLANG_ENABLE_OBJC_ARC" = "YES";
+				"GCC_C_LANGUAGE_STANDARD" = "c11";
+				"ARCHS" = (
+					"arm64",
+					"x86_64",
+				);
+				"ONLY_ACTIVE_ARCH" = "NO";
+				"CURRENT_PROJECT_VERSION" = "9";
+				"MARKETING_VERSION" = "0.1.0";
+				"GCC_WARN_ABOUT_RETURN_TYPE" = "YES_ERROR";
+				"CLANG_WARN_DOCUMENTATION_COMMENTS" = "YES";
+				"SWIFT_OPTIMIZATION_LEVEL" = "-O";
+				"GCC_OPTIMIZATION_LEVEL" = "s";
+				"DEBUG_INFORMATION_FORMAT" = "dwarf-with-dsym";
+			};
+		};
+		"76F8DEC3DFE0BDB465198890" = {
+			"isa" = "XCConfigurationList";
+			"buildConfigurations" = (
+				"73EBF6644258C120893E685D",
+				"0B0C687DF8B6B8DC790B519C",
+			);
+			"defaultConfigurationIsVisible" = "0";
+			"defaultConfigurationName" = "Release";
+		};
+		"244210E48437B6556980A702" = {
+			"isa" = "PBXProject";
+			"attributes" = {
+				"BuildIndependentTargetsInParallel" = "YES";
+				"LastUpgradeCheck" = "2710";
+			};
+			"buildConfigurationList" = "76F8DEC3DFE0BDB465198890";
+			"compatibilityVersion" = "Xcode 14.0";
+			"developmentRegion" = "en";
+			"hasScannedForEncodings" = "0";
+			"knownRegions" = (
+				"en",
+				"es",
+				"Base",
+			);
+			"mainGroup" = "0D6E4079E36703EBD37C0072";
+			"productRefGroup" = "0A3E27B8CA818264D75C8D81";
+			"projectDirPath" = "";
+			"projectRoot" = "";
+			"targets" = (
+				"E7A3CDEFEB9193C848ACCD43",
+				"E5B4A42C1A9B11F842B19C64",
+			);
+		};
+	};
+	"rootObject" = "244210E48437B6556980A702";
+}

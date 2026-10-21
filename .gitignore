@@ -1,0 +1,38 @@
+# Local builds, downloaded dependencies, and generated executables
+/.build/
+/.build-tools/
+/dist/
+/vendor/
+/Resim/Resources/Codecs/
+DerivedData/
+*.dSYM/
+*.xcarchive/
+*.xcresult/
+
+# Xcode, macOS, and Python user state
+.DS_Store
+xcuserdata/
+*.xcuserstate
+__pycache__/
+*.py[cod]
+
+# Credentials, signing material, and local configuration
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.pem
+*.key
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
+
+# Private development notes and machine-specific QA evidence (kept locally)
+/PLAN*.md
+/notas-de-avance/
+/docs/*.json
+/docs/screenshots/
+/private/
+/local/

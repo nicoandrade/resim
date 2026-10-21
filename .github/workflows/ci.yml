@@ -1,0 +1,57 @@
+name: macOS checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test (${{ matrix.runner }})
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Prepare build tools
+        run: |
+          xcodebuild -version
+          swift --version
+          command -v cmake >/dev/null || brew install cmake
+          command -v nasm >/dev/null || brew install nasm
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Check publication files
+        run: |
+          python3 scripts/check-public-repo.py
+          git diff --check
+      # Each job starts without downloaded sources, codec outputs or DerivedData.
+      - name: Build Universal 2 Release
+        run: bash scripts/build.sh
+      - name: Smoke test Release
+        run: bash scripts/smoke.sh
+      - name: Run tests on the runner architecture
+        run: bash scripts/test.sh
+      - name: Check generated source consistency
+        run: |
+          python3 scripts/check-public-repo.py
+          git diff --exit-code
+          test -z "$(git ls-files --others --exclude-standard)"

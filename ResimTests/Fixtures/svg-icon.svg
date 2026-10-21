@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Resim SVG fixture. Copyright 2026 Resim contributors. CC0-1.0. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+    <title>Atardecer de prueba</title>
+    <desc>Un paisaje vectorial propio, sin imágenes ni fuentes externas.</desc>
+    <metadata>License: CC0-1.0; Author: Resim test suite; conservar literalmente.</metadata>
+    <rect x="4" y="4" width="120" height="120" rx="26" fill="#f59a72" />
+    <circle cx="87" cy="40" r="17" fill="#fff1b5" />
+    <path d="M 10.00001 103.00002 L 43.123456789 56.00003 L 73.00004 90.00005 L 94.00006 74.00007 L 118.00008 103.00009 Z" fill="#a54661" />
+</svg>

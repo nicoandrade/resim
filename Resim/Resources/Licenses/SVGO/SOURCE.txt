@@ -1,0 +1,6 @@
+SVGO 4.1.0: https://github.com/svg/svgo/tree/v4.1.0
+Official npm browser distribution: svgo/browser
+Rebuild: bash scripts/build-svg.sh (npm ci --ignore-scripts, exact lockfile).
+Only sortAttrs optimizes content; Resim restores XML text and comment values before serialization.
+Runtime: the system JavaScriptCore framework; no Node.js runtime is distributed.
+boolbase notice: https://github.com/fb55/boolbase/blob/master/LICENSE

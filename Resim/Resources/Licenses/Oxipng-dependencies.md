@@ -1,0 +1,68 @@
+# Oxipng 9.1.5 dependency notices
+
+Versions are from the bundled Cargo.lock. License files are reproduced verbatim.
+
+- anstream-0.6.18: MIT OR Apache-2.0
+- anstyle-1.0.10: MIT OR Apache-2.0
+- anstyle-parse-0.2.6: MIT OR Apache-2.0
+- anstyle-query-1.1.2: MIT OR Apache-2.0
+- anstyle-wincon-3.0.7: MIT OR Apache-2.0
+- bitflags-2.9.0: MIT OR Apache-2.0
+- bitvec-1.0.1: MIT
+- bumpalo-3.17.0: MIT OR Apache-2.0
+- bytemuck-1.22.0: Zlib OR Apache-2.0 OR MIT
+- cc-1.2.19: MIT OR Apache-2.0
+- cfg-if-1.0.0: MIT/Apache-2.0
+- clap-4.5.36: MIT OR Apache-2.0
+- clap_builder-4.5.36: MIT OR Apache-2.0
+- clap_lex-0.7.4: MIT OR Apache-2.0
+- colorchoice-1.0.3: MIT OR Apache-2.0
+- crc32fast-1.4.2: MIT OR Apache-2.0
+- crossbeam-channel-0.5.15: MIT OR Apache-2.0
+- crossbeam-deque-0.8.6: MIT OR Apache-2.0
+- crossbeam-epoch-0.9.18: MIT OR Apache-2.0
+- crossbeam-utils-0.8.21: MIT OR Apache-2.0
+- either-1.15.0: MIT OR Apache-2.0
+- env_filter-0.1.3: MIT OR Apache-2.0
+- env_logger-0.11.8: MIT OR Apache-2.0
+- equivalent-1.0.2: Apache-2.0 OR MIT
+- errno-0.3.11: MIT OR Apache-2.0
+- filetime-0.2.25: MIT/Apache-2.0
+- funty-2.0.0: MIT
+- glob-0.3.2: MIT OR Apache-2.0
+- hashbrown-0.15.2: MIT OR Apache-2.0
+- indexmap-2.9.0: Apache-2.0 OR MIT
+- is_terminal_polyfill-1.70.1: MIT OR Apache-2.0
+- libc-0.2.172: MIT OR Apache-2.0
+- libdeflate-sys-1.23.1: Apache-2.0
+- libdeflater-1.23.1: Apache-2.0
+- libredox-0.1.3: MIT
+- linux-raw-sys-0.9.4: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
+- log-0.4.27: MIT OR Apache-2.0
+- once_cell-1.21.3: MIT OR Apache-2.0
+- oxipng-9.1.5: MIT
+- radium-0.7.0: MIT
+- rayon-1.10.0: MIT OR Apache-2.0
+- rayon-core-1.12.1: MIT OR Apache-2.0
+- redox_syscall-0.5.11: MIT
+- rgb-0.8.50: MIT
+- rustc-hash-2.1.1: Apache-2.0 OR MIT
+- rustix-1.0.5: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
+- shlex-1.3.0: MIT OR Apache-2.0
+- simd-adler32-0.3.7: MIT
+- strsim-0.11.1: MIT
+- tap-1.0.1: MIT
+- terminal_size-0.4.2: MIT OR Apache-2.0
+- utf8parse-0.2.2: Apache-2.0 OR MIT
+- windows-sys-0.59.0: MIT OR Apache-2.0
+- windows-targets-0.52.6: MIT OR Apache-2.0
+- windows_aarch64_gnullvm-0.52.6: MIT OR Apache-2.0
+- windows_aarch64_msvc-0.52.6: MIT OR Apache-2.0
+- windows_i686_gnu-0.52.6: MIT OR Apache-2.0
+- windows_i686_gnullvm-0.52.6: MIT OR Apache-2.0
+- windows_i686_msvc-0.52.6: MIT OR Apache-2.0
+- windows_x86_64_gnu-0.52.6: MIT OR Apache-2.0
+- windows_x86_64_gnullvm-0.52.6: MIT OR Apache-2.0
+- windows_x86_64_msvc-0.52.6: MIT OR Apache-2.0
+- wyz-0.5.1: MIT
+- zopfli-0.8.2: Apache-2.0

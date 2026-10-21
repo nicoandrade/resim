@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "keep-a-changelog": {
+      "source": "nicoandrade/dinvolt",
+      "sourceType": "github",
+      "skillPath": "skills/keep-a-changelog/SKILL.md",
+      "computedHash": "69eda62ba0ff47fce268963f6ee18a989bd857985ccc6f25d5e81989ad158ff7"
+    }
+  }
+}

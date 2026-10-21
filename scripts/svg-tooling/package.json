@@ -1,0 +1,8 @@
+{
+  "name": "resim-svg-tooling",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": { "svgo": "4.1.0" },
+  "devDependencies": { "esbuild": "0.25.11" }
+}

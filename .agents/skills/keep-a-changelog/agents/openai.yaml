@@ -1,0 +1,4 @@
+interface:
+  display_name: "Keep a Changelog"
+  short_description: "Choose a version and prepare clear release notes"
+  default_prompt: "Use $keep-a-changelog to review the changes, choose the next version, and update the changelog."

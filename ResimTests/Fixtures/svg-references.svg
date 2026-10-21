@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- License: CC0-1.0. Own fixture; this license comment must survive. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="128" height="128" viewBox="0 0 128 128">
+    <title>Sol, montaña y café — Ñ 试 ☀</title>
+    <desc>Conservar ids, referencias, CSS, máscara, texto y precisión.</desc>
+    <metadata>Author: Pruebas Resim; rights: CC0-1.0; user text:  a  b  </metadata>
+    <defs>
+        <linearGradient id="sunsetGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffd78f" />
+            <stop offset="100%" stop-color="#e97182" />
+        </linearGradient>
+        <clipPath id="roundClip">
+            <rect x="4" y="4" width="120" height="120" rx="18" />
+        </clipPath>
+        <mask id="sunMask">
+            <rect x="0" y="0" width="128" height="128" fill="white" />
+            <circle cx="96" cy="34" r="7" fill="black" />
+        </mask>
+        <path id="mountainShape" d="M 6.123456789 106 L 44 58 L 74 94 L 92 74 L 122 106 Z" />
+    </defs>
+    <style>.mountain { fill: currentColor; } .sun { fill: #fff2ba; }</style>
+    <g clip-path="url(#roundClip)" color="#a04762">
+        <rect width="128" height="128" fill="url(#sunsetGradient)" />
+        <circle class="sun" cx="88" cy="35" r="19" mask="url(#sunMask)" />
+        <use xlink:href="#mountainShape" class="mountain" />
+        <text x="11" y="119" font-size="8" fill="white" xml:space="preserve">Ñ 试  café <tspan> a  b </tspan> ☀</text>
+    </g>
+</svg>
