@@ -66,6 +66,8 @@ bash scripts/package.sh
 
 This creates a local ad hoc package in `dist/`. Public direct distribution requires Developer ID signing and Apple notarization; see [distribution instructions](docs/DISTRIBUTION.md). Do not put signing credentials, certificates, private keys, or local release reports in the repository.
 
+After the one-time signing setup, pushing a stable version tag runs the [GitHub release workflow](.github/workflows/release.yml): clean builds and tests on Apple Silicon and Intel, signing, notarization, and publication of the DMG and checksum. The landing download always resolves to the latest verified release. See [automated releases](docs/DISTRIBUTION.md#automated-github-releases) for configuration and rehearsals.
+
 Installation and updates are manual: drag Resim into Applications and replace the app when updating. Removing Resim does not remove original images or optimized copies.
 
 ## Contribute and license

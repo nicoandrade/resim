@@ -3,8 +3,10 @@
 
 import copy
 import base64
+from contextlib import redirect_stdout
 import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -35,6 +37,7 @@ class ReleaseTests(unittest.TestCase):
         self.addCleanup(patch.stopall)
         patch.object(release, 'ROOT', self.root).start()
         patch.dict(os.environ, self.environment, clear=True).start()
+        patch('sys.stdout', new=io.StringIO()).start()
         patch.object(release, 'command', return_value=self.sha).start()
         self.run = patch.object(release.subprocess, 'run').start()
         self.requests = []
@@ -123,6 +126,14 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 release.verify_uploaded(dict(assets=assets), self.assets, self.hashes)
 
+    def test_failed_upload_verification_leaves_previous_latest(self):
+        with patch.object(release, 'verify_uploaded', side_effect=RuntimeError('upload digest mismatch')):
+            with self.assertRaisesRegex(RuntimeError, 'digest mismatch'):
+                release.publish()
+        self.assertTrue(self.draft['draft'])
+        self.assertEqual(self.latest['tag_name'], 'v0.1.0')
+        self.assertFalse(any(method == 'PATCH' for _, method, _ in self.requests))
+
     def test_manual_rehearsal_does_not_contact_release_api(self):
         os.environ.update(GITHUB_EVENT_NAME='workflow_dispatch', GITHUB_REF='refs/heads/main')
         release.prepare()
@@ -139,6 +150,42 @@ class ReleaseTests(unittest.TestCase):
 
 
 class SigningCleanupTests(unittest.TestCase):
+    def test_wrapped_certificate_package_environment_and_cleanup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / '.build').mkdir()
+            (root / '.build/package-verification.json').write_text(json.dumps(dict(public_distribution_ready=True)))
+            environment = {name: 'test-value' for name in signer.SECRET_NAMES}
+            environment.update(GITHUB_ACTIONS='true', RUNNER_TEMP=temporary,
+                               DEVELOPER_ID_P12_BASE64=base64.encodebytes(b'fake-certificate').decode())
+            calls = []
+
+            def private(*args):
+                calls.append(args)
+                if args[1] == 'list-keychains' and '-s' not in args:
+                    return '"original.keychain-db"'
+                if args[1] == 'find-identity':
+                    return f'1) {"A" * 40} "Developer ID Application: Test"'
+                if args[1] == 'import':
+                    self.assertEqual(Path(args[2]).read_bytes(), b'fake-certificate')
+                return ''
+
+            def run(args, **kwargs):
+                if args[0] == 'bash':
+                    self.assertFalse(set(signer.SECRET_NAMES) & kwargs['env'].keys())
+                    self.assertEqual(kwargs['env']['REQUIRE_NOTARIZATION'], '1')
+                    self.assertEqual(kwargs['env']['SKIP_BUILD'], '1')
+                    self.assertEqual(kwargs['env']['NOTARY_PROFILE'], 'resim-ci')
+                return type('Result', (), {'returncode': 0})()
+
+            with patch.dict(os.environ, environment, clear=True), patch.object(signer, 'ROOT', root), \
+                    patch.object(signer, 'private_command', side_effect=private), \
+                    patch.object(signer.subprocess, 'run', side_effect=run) as subprocess_run, \
+                    redirect_stdout(io.StringIO()):
+                signer.main()
+                self.assertEqual(subprocess_run.call_args.args[0][:2], ['security', 'delete-keychain'])
+                self.assertFalse(list(root.glob('resim-signing-*')))
+
     def test_missing_secrets_stop_before_keychain_commands(self):
         with patch.dict(os.environ, {}, clear=True), patch.object(signer, 'private_command') as private:
             with self.assertRaisesRegex(SystemExit, 'Configure these GitHub'):

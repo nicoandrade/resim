@@ -35,7 +35,8 @@ def main():
         directory = Path(temporary)
         keychain = str(directory / 'release.keychain-db')
         certificate = directory / 'certificate.p12'
-        certificate.write_bytes(base64.b64decode(os.environ['DEVELOPER_ID_P12_BASE64'], validate=True))
+        encoded_certificate = ''.join(os.environ['DEVELOPER_ID_P12_BASE64'].split())
+        certificate.write_bytes(base64.b64decode(encoded_certificate, validate=True))
         certificate.chmod(0o600)
         password = secrets.token_urlsafe(32)
         try:
@@ -70,9 +71,11 @@ def main():
                 raise RuntimeError('Package failed public distribution verification.')
             print('Developer ID signatures, Universal 2, both stapled tickets and Gatekeeper checks passed.')
         finally:
-            private_command('security', 'list-keychains', '-d', 'user', '-s', *original_keychains)
-            subprocess.run(['security', 'delete-keychain', keychain], stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL, check=False)
+            try:
+                private_command('security', 'list-keychains', '-d', 'user', '-s', *original_keychains)
+            finally:
+                subprocess.run(['security', 'delete-keychain', keychain], stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL, check=False)
 
 
 if __name__ == '__main__':
