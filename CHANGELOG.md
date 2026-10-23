@@ -6,6 +6,17 @@ Notable changes to Resim are documented here. This file follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-23
+
+### Changed
+
+- Maximum JPEG compression refines intermediate quality levels to find smaller validated files while retaining the existing 16 dB quality floor in every RGB channel and the limit of ten lossy attempts. Other profiles and formats keep their current settings.
+
+### Added
+
+- JPG and PNG size and timing comparisons with ImageOptim, including measurement and metadata differences, plus reproducible comparison and paired JPEG benchmark tools.
+- Regression coverage for intermediate JPEG quality selection and cancellation after a smaller candidate has been found.
+
 ## [0.2.1] - 2026-10-21
 
 ### Changed
@@ -51,5 +62,6 @@ Initial release prepared locally.
 
 - Bound Swift 6.2 type-checking work when constructing animated GIF test fixtures so the test suite can compile reliably.
 
-[Unreleased]: https://github.com/nicoandrade/resim/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/nicoandrade/resim/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/nicoandrade/resim/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/nicoandrade/resim/compare/v0.2.0...v0.2.1

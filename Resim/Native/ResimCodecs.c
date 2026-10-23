@@ -230,20 +230,50 @@ int rc_jpeg_coefficients_equal(const uint8_t*a,size_t an,const uint8_t*b,size_t 
  }
  ok=ok&&!x->e.warnings&&!y->e.warnings;jpeg_cleanup(x);jpeg_cleanup(y);return ok;
 }
+typedef struct {
+ int qualities[10],potential[10],count;
+} JPEGMaximumSearch;
+
+static int jpeg_maximum_next_quality(const JPEGMaximumSearch *search){
+ // Keep every Web candidate so Maximum always has its eligible outputs too.
+ if(search->count<7)return (int)rc_profile_quality(2,0,search->count);
+ int upper=101,lower=0;
+ for(int k=0;k<search->count;k++)
+  if(search->potential[k]&&search->qualities[k]<upper)upper=search->qualities[k];
+ if(upper==101)return -1;
+ for(int k=0;k<search->count;k++)
+  if(!search->potential[k]&&search->qualities[k]<upper&&search->qualities[k]>lower)lower=search->qualities[k];
+ if(lower)return upper-lower>1?lower+(upper-lower)/2:-1;
+ // No measured rejection below the promising level: extend the coarse range.
+ for(int k=7;k<10;k++){
+  int quality=(int)rc_profile_quality(3,0,k);
+  if(quality<upper)return quality;
+ }
+ return -1;
+}
+
 int rc_jpeg_optimize(const uint8_t*b,size_t n,int profile,int strip,RCShouldCancel cb,void*ctx,RCBuffer*out,char*e,size_t en){
  out->bytes=NULL;out->size=0;RCBuffer best={0},trial={0};
  if(!jpeg_encode(b,n,0,strip,cb,ctx,&best)){message(e,en,cancelled(cb,ctx)?"Cancelled.":"Could not decode the complete JPEG.");return 0;}
  if(!rc_jpeg_coefficients_equal(b,n,best.bytes,best.size)){rc_buffer_free(&best);message(e,en,"The JPEG candidate does not preserve the coefficients.");return 0;}
  int attempts=rc_profile_attempts(profile);
  if(attempts&&jpeg_auto_safe(b,n)){
+  JPEGMaximumSearch search={0};
   for(int step=0;step<attempts&&!cancelled(cb,ctx);step++){
-   if(!jpeg_encode(b,n,(int)rc_profile_quality(profile,0,step),strip,cb,ctx,&trial))break;
+   int quality=profile==3?jpeg_maximum_next_quality(&search):(int)rc_profile_quality(profile,0,step);
+   if(quality<0)break;
+   if(!jpeg_encode(b,n,quality,strip,cb,ctx,&trial))break;
+   // Oversized candidates have unknown quality. They can bound a later search,
+   // but must never be accepted without the existing size and RGB checks.
+   int potential=1;
    if(trial.size<n&&trial.size<best.size){
     int w=0,h=0,cw=0,ch=0;uint8_t*p=jpeg_rgba(b,n,&w,&h),*q=jpeg_rgba(trial.bytes,trial.size,&cw,&ch);
-    if(p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,rc_profile_min_ssim_db(profile),NULL)){
+    potential=p&&q&&w==cw&&h==ch&&similar_metrics(p,q,w,h,rc_profile_min_ssim_db(profile),NULL);
+    if(potential){
      rc_buffer_free(&best);best=trial;trial.bytes=NULL;trial.size=0;
     }free(p);free(q);
    }rc_buffer_free(&trial);
+   if(profile==3){search.qualities[search.count]=quality;search.potential[search.count++]=potential;}
   }
  }
  if(cancelled(cb,ctx)||best.size>=n)rc_buffer_free(&best);*out=best;return 1;

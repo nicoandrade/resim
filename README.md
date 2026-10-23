@@ -33,7 +33,7 @@ not percentages of retained visual quality or directly comparable across formats
 
 | Format / validation | Conservative | Web (default) | Maximum compression |
 | --- | --- | --- | --- |
-| JPEG — MozJPEG quality | 92 | 98, 95, 92, 88, 84, 80, 76 | All Web levels + 70, 64, 58 |
+| JPEG — MozJPEG quality | 92 | 98, 95, 92, 88, 84, 80, 76 | All Web levels + up to 3 adaptive trials: intermediate integers or 70, 64, 58 |
 | Lossy WebP — libwebp quality | 90 | 98, 94, 90, 85, 80, 75, 70 | All Web levels + 60, 50, 40 |
 | AVIF — libavif/AOM quality | 95 | 95, 90, 85, 80, 75, 65, 55 | All Web levels + 45, 35, 25 |
 | HEIC — Image I/O quality | 0.85 | 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65 | All Web levels + 0.55, 0.45, 0.35 |
@@ -51,12 +51,42 @@ is published if it fails quality, preservation, or size checks. Some images
 therefore produce identical results across profiles.
 
 JPEG preserves its original chroma subsampling and uses progressive coding.
+Maximum JPEG uses its final three attempts to refine the interval between a
+promising level and a measured quality rejection, or extend to lower coarse
+levels when there is no such rejection. It can finish early when no untried
+integer remains in that interval. Every output still passes the same 16 dB RGB
+floor; the bounded search does not guarantee a globally smallest encoding.
 WebP uses method 4 and alpha quality 100; lossless WebP additionally uses quality
 75 as its encoding-effort parameter. AVIF uses AOM speed 6 and lossless alpha.
 PNG, GIF, SVG and lossless WebP remain lossless in every profile. Alpha is checked
 exactly, and all formats retain their dimensions and format. Unknown metadata
 can disable lossy recompression. The separate **Lossless** mode overrides the
 selected profile. See [codec preservation rules](docs/CODECS.md) for details.
+
+## Comparison with ImageOptim
+
+Total size reduction from the same originals: **20 JPG and 12 PNG files**, measured
+locally on October 23, 2026. Higher percentages mean smaller total output sizes.
+Maximum includes the updated JPEG search.
+Each cell shows **size reduction · measured time** for that format's full sample.
+
+| Resim Conservative | Resim Web | Resim Maximum | ImageOptim 1.9.3 (default) |
+| --- | --- | --- | --- |
+| JPG: **10.52% · 2.09 s** | JPG: **13.28% · 12.44 s** | JPG: **31.28% · 15.91 s** | JPG: **10.70% · 8.67 s** |
+| PNG: **14.06% · 2.73 s** | PNG: **14.06% · 2.78 s** | PNG: **14.06% · 2.75 s** | PNG: **14.81% · 48.28 s** |
+
+Times sum per-file medians from three runs (five for updated JPG Maximum) on an
+Apple M2 with 24 GiB RAM. Resim measures processing and validation; ImageOptim
+also includes a fresh app process and saving for every image. **These timings
+are not equivalent for comparing app speed**, and do not measure a concurrent
+batch in either interface. PNG uses the same Resim settings in every profile;
+its small timing differences reflect measurement variation.
+
+ImageOptim's default disables lossy compression and removes optional metadata;
+Resim preserves metadata in this comparison. Resim's PNG path is lossless in all
+three profiles. These sample results are not a guarantee for other images.
+See the [comparison methodology](docs/IMAGEOPTIM-COMPARISON.md) and
+[updated JPEG Maximum measurements](docs/JPEG-MAXIMUM-REFINEMENT.md).
 
 ## Supported images
 

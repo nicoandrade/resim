@@ -10,7 +10,8 @@ typedef struct { uint8_t *bytes; size_t size; } RCBuffer;
  * initial calibration, not a guarantee of perceptual transparency. */
 int rc_profile_attempts(int profile);
 float rc_profile_min_ssim_db(int profile);
-/* Format: 0 JPEG, 1 WebP, 2 AVIF, 3 HEIC. Invalid requests return -1. */
+/* Coarse candidates: 0 JPEG, 1 WebP, 2 AVIF, 3 HEIC. Invalid requests return -1.
+ * Maximum JPEG can replace the last three with adaptive intermediate levels. */
 double rc_profile_quality(int profile, int format, int attempt);
 int rc_rgba_quality_rgb(const uint8_t *, const uint8_t *, int width, int height, int profile);
 int rc_avif_quality_rgb(const uint8_t *, size_t, const uint8_t *, size_t, int profile);

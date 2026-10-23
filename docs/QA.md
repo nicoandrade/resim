@@ -150,3 +150,30 @@ quality and alpha rejection, decreasing sizes across stronger profiles on a fixe
 corpus, exact lossless overrides, and source preservation. Historical 30 dB
 regressions explicitly exercise Conservative. Queue tests check captured profiles
 and persistence. Release QA and replacement-mode checks use the new Web default.
+
+Maximum JPEG also has an intermediate-quality regression and a late-cancellation
+check that observes callback counts instead of relying on wall-clock timing.
+The bounded adaptive search can be checked under arbitrary/nonmonotonic outcomes:
+
+```sh
+clang -O1 -g -fsanitize=address,undefined -Ivendor/build/include \
+  scripts/check-jpeg-search.c -Lvendor/build/lib \
+  -ljpeg -lwebpmux -lwebpdemux -lwebp -lsharpyuv -lz -lm \
+  -o .build/check-jpeg-search
+.build/check-jpeg-search
+```
+
+For paired Release-optimized processor measurements against a frozen C source:
+
+```sh
+python3 scripts/benchmark-jpeg-maximum.py --inputs /path/to/jpeg-corpus \
+  --baseline-source /path/to/ResimCodecs-before.c \
+  --output .build/jpeg-maximum-paired --repetitions 5
+```
+
+Both variants use the same current Swift code, resources and native libraries;
+only the codec C source differs. The harness alternates execution order and
+checks full-resolution RGB quality, ICC, orientation, dimensions and source
+integrity. It also compares Lossless, Conservative and Web output hashes on the
+original corpus. It excludes application startup and is not a GUI batch timing.
+Run it sequentially, without another benchmark or build in progress.

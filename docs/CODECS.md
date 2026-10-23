@@ -36,6 +36,17 @@ These are initial calibration values for visual review, not universal web standa
 
 Each attempt encodes the same admitted original; no candidate is recompressed. The smallest validated candidate wins, including the safe lossless candidate where available. No larger result is published. Web tries at most seven lossy levels, Maximum ten; this uses more CPU/time than Conservative. Attempts are sequential inside the existing bounded worker pool, with cancellation between attempts and native cancellation callbacks where available. Per-attempt validation buffers are released before the next attempt.
 
+Maximum JPEG always tries the seven Web levels first. Its remaining budget of
+three attempts refines an integer interval between a promising quality and a
+measured rejection below it; without a lower rejection it extends to 70, 64 and
+58. A candidate too large to improve the result can bound a refinement, but its
+quality remains unknown and it is never accepted without full validation. The
+search stops early when the selected interval has no remaining integer. SSIM and
+encoded size need not be monotonic in encoder quality: this is a bounded search,
+not proof that all lower or untried qualities would fail. It retains the 16 dB
+floor, original subsampling, metadata policy and cancellation behavior. Other
+profiles and formats retain their fixed candidate lists.
+
 Format and dimensions remain unchanged. PNG, GIF, SVG, and lossless WebP retain their lossless paths in all profiles. JPEG retains original subsampling and progressive coding. WebP uses method 4 and alpha quality 100. AVIF uses AOM speed 6 and lossless alpha. HEIC tries a native lossless copy before optional HEVC recompression. Unknown JPEG markers, metadata between scans, and uninterpretable WebP/XMP extensions can disable recompression.
 
 Lossy candidates must pass full-resolution validation with finite SSIM scores at or above the selected floor in **every** RGB channel. The libwebp distortion API returns B/G/R/A/All scores; acceptance uses the individual RGB channels. Alpha is checked exactly; AVIF also checks hidden RGB under zero alpha. Preservation checks are never relaxed by the selected profile. HEIC remains restricted to 8-bit SDR RGB without sequences or auxiliary images; AVIF rejects HDR, gain maps, animation, progressive content, and unsupported container properties.

@@ -2,6 +2,69 @@ import XCTest
 @testable import Resim
 
 final class CompressionProfileTests: XCTestCase {
+    func testMaximumJPEGFindsIntermediateQualityWithoutRelaxingTheFloor() throws {
+        XCTAssertEqual(rc_profile_min_ssim_db(3), 16)
+        XCTAssertEqual(rc_profile_attempts(3), 10)
+        let source = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "icc-444.jpg", withExtension: nil, subdirectory: "Fixtures"))
+        let original = try Data(contentsOf: source)
+        let work = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: work) }
+        let output = try XCTUnwrap(NativeImageProcessor().optimize(source: source, workDirectory: work,
+            settings: .init(profile: .maximum), cancellation: CancellationToken()))
+        let candidate = try Data(contentsOf: output)
+        // The old coarse search saves less than 25% on this pinned fixture.
+        XCTAssertLessThan(candidate.count, original.count * 3 / 4)
+        var scores = [Float](repeating: 0, count: 5)
+        original.withUnsafeBytes { a in candidate.withUnsafeBytes { b in
+            _ = rc_jpeg_ssim_rgb(a.bindMemory(to: UInt8.self).baseAddress, a.count,
+                                 b.bindMemory(to: UInt8.self).baseAddress, b.count, &scores)
+        }}
+        XCTAssertTrue(scores.prefix(3).allSatisfy { $0.isFinite && $0 >= 16 }, "\(scores)")
+        let before = try NativeImageProcessor().inspect(source), after = try NativeImageProcessor().inspect(output)
+        XCTAssertEqual(before.width, after.width); XCTAssertEqual(before.height, after.height)
+        XCTAssertEqual(before.format, after.format)
+        XCTAssertEqual(try Data(contentsOf: source), original)
+    }
+
+    func testMaximumJPEGLateCancellationDiscardsTheSmallerCandidate() throws {
+        let source = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "icc-444.jpg", withExtension: nil, subdirectory: "Fixtures"))
+        let original = try Data(contentsOf: source)
+        // First observe callback count, then cancel just before completion. This
+        // exercises an existing accepted candidate without wall-clock timing.
+        let state = UnsafeMutablePointer<Int>.allocate(capacity: 2)
+        state.initialize(repeating: 0, count: 2)
+        state[1] = Int.max
+        defer { state.deinitialize(count: 2); state.deallocate() }
+        let callback: RCShouldCancel = { context in
+            let state = context!.assumingMemoryBound(to: Int.self)
+            state[0] += 1
+            return state[0] >= state[1] ? 1 : 0
+        }
+        for pass in 0..<2 {
+            var output = RCBuffer(bytes: nil, size: 0)
+            defer { rc_buffer_free(&output) }
+            var error = [CChar](repeating: 0, count: 512)
+            let status = original.withUnsafeBytes { bytes in
+                rc_jpeg_optimize(bytes.bindMemory(to: UInt8.self).baseAddress, bytes.count,
+                    3, 0, callback, state, &output, &error, error.count)
+            }
+            XCTAssertEqual(status, 1)
+            if pass == 0 {
+                XCTAssertNotNil(output.bytes)
+                XCTAssertLessThan(output.size, original.count * 3 / 4)
+                XCTAssertGreaterThan(state[0], 2)
+                state[1] = state[0] - 1
+                state[0] = 0
+            } else {
+                XCTAssertGreaterThanOrEqual(state[0], state[1])
+                XCTAssertNil(output.bytes)
+                XCTAssertEqual(output.size, 0)
+            }
+        }
+        XCTAssertEqual(try Data(contentsOf: source), original)
+    }
+
     func testDefaultAndLegacyPreferencesUseWebWithoutChangingExplicitLosslessOrSaveMode() throws {
         XCTAssertEqual(OptimizationSettings().profile, .web)
         for mode in OptimizationMode.allCases {
